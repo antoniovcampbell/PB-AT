@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: catalogo
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [catalogo:8090]
+  - job_name: avaliacoes
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [avaliacoes:8081]
+  - job_name: prometheus
+    static_configs:
+      - targets: [prometheus:9090]

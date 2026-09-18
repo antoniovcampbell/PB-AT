@@ -1,0 +1,78 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_OWNER: ${{ github.repository_owner }}
+
+jobs:
+  publish:
+    name: Build and publish images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push catalogo
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.catalogo
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/pb-at-catalogo:${{ github.sha }}
+      - name: Build and push avaliacoes
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.avaliacoes
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/pb-at-avaliacoes:${{ github.sha }}
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: frontend/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/pb-at-frontend:${{ github.sha }}
+
+  deploy:
+    name: Deploy to Kubernetes
+    needs: publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure kubectl
+        if: env.KUBE_CONFIG != ''
+        uses: azure/setup-kubectl@v4
+      - name: Deploy manifests
+        if: env.KUBE_CONFIG != ''
+        run: |
+          mkdir -p "$HOME/.kube"
+          printf '%s' "$KUBE_CONFIG" | base64 --decode > "$HOME/.kube/config"
+          kubectl apply -k k8s
+          kubectl -n pb-at set image deployment/catalogo catalogo=${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/pb-at-catalogo:${{ github.sha }}
+          kubectl -n pb-at set image deployment/avaliacoes avaliacoes=${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/pb-at-avaliacoes:${{ github.sha }}
+          kubectl -n pb-at set image deployment/frontend frontend=${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/pb-at-frontend:${{ github.sha }}
+          kubectl -n pb-at rollout status deployment/catalogo --timeout=180s
+          kubectl -n pb-at rollout status deployment/avaliacoes --timeout=180s
+          kubectl -n pb-at rollout status deployment/frontend --timeout=180s
+      - name: Skip deployment when cluster is not configured
+        if: env.KUBE_CONFIG == ''
+        run: echo "KUBE_CONFIG is not configured; images were published successfully."

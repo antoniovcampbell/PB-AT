@@ -1,0 +1,21 @@
+FROM maven:3.9-eclipse-temurin-21 AS build
+
+WORKDIR /workspace
+COPY .mvn .mvn
+COPY mvnw pom.xml ./
+COPY shared/pom.xml shared/pom.xml
+COPY catalogo/pom.xml catalogo/pom.xml
+COPY avaliacoes/pom.xml avaliacoes/pom.xml
+RUN chmod +x mvnw
+COPY shared/src shared/src
+COPY catalogo/src catalogo/src
+RUN ./mvnw -B -pl catalogo -am package -DskipTests
+
+FROM eclipse-temurin:21-jre
+
+WORKDIR /app
+RUN useradd --system --uid 1001 appuser
+COPY --from=build --chown=appuser:appuser /workspace/catalogo/target/catalogo-*.jar app.jar
+USER 1001
+EXPOSE 8090
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app/app.jar"]

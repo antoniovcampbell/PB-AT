@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: avaliacoes
+spec:
+  selector:
+    app: avaliacoes
+  ports:
+    - port: 8081
+      targetPort: 8081
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: avaliacoes
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: avaliacoes
+  template:
+    metadata:
+      labels:
+        app: avaliacoes
+    spec:
+      containers:
+        - name: avaliacoes
+          image: ghcr.io/antonio/pb-at-avaliacoes:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: pb-at-config
+            - secretRef:
+                name: pb-at-secrets
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: avaliacoes
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres:5432/avaliacoes
+            - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+              value: org.postgresql.Driver
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            failureThreshold: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8081
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8081
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: avaliacoes
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: avaliacoes
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
