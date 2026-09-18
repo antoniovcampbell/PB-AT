@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
-
 :root { --ink:#15231f; --muted:#6c7b75; --paper:#f5f7f1; --card:#fffefa; --line:#dfe5da; --moss:#315d4e; --lime:#d9f06c; --red:#c95650; --shadow:0 18px 48px #19372b12; font-family:Manrope,system-ui,sans-serif; color:var(--ink); background:var(--paper); }
 * { box-sizing:border-box; } body { margin:0; min-width:320px; background:radial-gradient(circle at 88% 8%,#e5efbe 0,transparent 25rem),var(--paper); } button,input,select,textarea { font:inherit; } button { cursor:pointer; } button:disabled { cursor:not-allowed; opacity:.55; }
 .app-shell { min-height:100vh; } .topbar { min-height:78px; padding:0 clamp(18px,4vw,64px); display:flex; align-items:center; gap:42px; border-bottom:1px solid var(--line); background:#f5f7f1e8; backdrop-filter:blur(18px); position:sticky; top:0; z-index:10; }
@@ -16,3 +14,50 @@
 .dashboard-section { padding-top:65px; }.empty-state { grid-column:1/-1; padding:80px 20px; border:1px dashed #bccbbd; border-radius:18px; color:var(--muted); text-align:center; }.empty-state span { color:var(--moss); font-size:2rem; }.empty-state h3 { margin:12px 0 6px; color:var(--ink); }.empty-state p { margin:0 0 20px; font-size:.75rem; }.purchase-list { display:grid; gap:10px; }.purchase-card { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:22px; border:1px solid var(--line); border-radius:14px; background:var(--card); }.purchase-card h3 { margin:8px 0 4px; font-size:1rem; }.purchase-card small { color:var(--muted); font-size:.68rem; }.purchase-side { display:grid; justify-items:end; gap:7px; }.purchase-side strong { font-size:1.1rem; }.purchase-status { padding:5px 9px; border-radius:99px; color:var(--moss); background:#e4f0d5; font-family:'DM Mono',monospace; font-size:.57rem; }.admin-layout { display:grid; grid-template-columns:1.15fr .85fr; gap:18px; }.admin-form,.admin-box { padding:25px; border:1px solid var(--line); border-radius:15px; background:var(--card); }.form-heading h3,.admin-box h3 { margin:7px 0 20px; font-size:1.2rem; letter-spacing:-.05em; }.admin-form .campo { margin-bottom:13px; }.form-line { display:grid; grid-template-columns:1fr 1fr; gap:10px; }.form-actions { display:flex; gap:8px; margin-top:20px; }.admin-side { display:grid; align-content:start; gap:18px; }.admin-box p { color:var(--muted); font-size:.72rem; line-height:1.6; }.inline-form { display:flex; gap:7px; }.inline-form input { min-width:0; flex:1; border:1px solid var(--line); border-radius:8px; padding:0 10px; font-size:.7rem; }.category-list { display:grid; gap:8px; margin-top:18px; }.category-list span { display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid var(--line); font-size:.72rem; }.category-list small { color:var(--muted); font-family:'DM Mono',monospace; }.state-legend>div { display:flex; align-items:center; gap:8px; margin-top:13px; color:var(--muted); font-size:.7rem; }.state-legend>div strong { margin-left:auto; color:var(--ink); }.status-dot { width:8px; height:8px; border-radius:50%; }.footer { display:flex; justify-content:space-between; gap:15px; width:min(1160px,calc(100% - 40px)); margin:auto; padding:28px 0; border-top:1px solid var(--line); color:var(--muted); font-size:.62rem; }.footer span:first-child { color:var(--ink); font-weight:800; }
 @media(max-width:1050px) { .filter-panel { grid-template-columns:1.5fr 1fr 1fr; }.price-range { grid-column:span 2; }.product-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.filter-clear { grid-column:3; } }
 @media(max-width:760px) { .topbar { min-height:70px; flex-wrap:wrap; gap:8px 15px; padding:13px 18px; }.main-nav { order:3; width:100%; gap:22px; }.main-nav button { padding:4px 0 8px; }.account-name { display:none; }.page-wrap { width:min(100% - 24px,600px); }.hero-section { grid-template-columns:1fr; padding:58px 4% 25px; }.hero-art { min-height:250px; }.hero-section h1 { font-size:clamp(2.7rem,14vw,4.5rem); }.insight-row { grid-template-columns:1fr 1fr; gap:17px 0; margin:25px 4% 55px; }.insight-row>div,.insight-row>div:first-child { padding:0 12px; border-right:0; }.insight-row>div:nth-child(2) { border-right:1px solid var(--line); }.insight-note { grid-column:1/-1; justify-content:flex-start; padding:15px 12px 0!important; text-align:left; border-top:1px solid var(--line); }.catalog-section,.dashboard-section { padding:0 3% 55px; }.section-heading { align-items:start; flex-direction:column; gap:9px; }.filter-panel { grid-template-columns:1fr 1fr; }.search-field,.price-range { grid-column:1/-1; }.filter-clear { grid-column:auto; }.product-grid { grid-template-columns:1fr; }.auth-screen { grid-template-columns:1fr; gap:30px; padding:50px 5%; }.auth-copy h2 { font-size:3rem; }.auth-card { padding:21px; }.avaliacoes-form { grid-template-columns:1fr; }.avaliacoes-form .campo-full { grid-column:auto; }.login-callout { flex-wrap:wrap; }.login-callout p { min-width:180px; }.admin-layout { grid-template-columns:1fr; }.purchase-card { align-items:start; flex-direction:column; }.purchase-side { justify-items:start; }.footer { flex-wrap:wrap; }.footer span:nth-child(2) { order:3; width:100%; } }
+
+.hero-section { grid-template-columns:1fr; }
+
+/* Visual base intentionally stays plain and content-first. */
+:root { --ink:#111; --muted:#555; --paper:#fff; --card:#fff; --line:#111; --moss:#111; --lime:#111; --red:#900; --shadow:none; font-family:Arial,Helvetica,sans-serif; color:var(--ink); background:var(--paper); }
+* { border-radius:0 !important; box-shadow:none !important; }
+body { background:#fff !important; }
+.topbar { background:#fff; backdrop-filter:none; border-bottom:2px solid #111; }
+.brand strong,.brand small,.main-nav button,.account-name strong,.account-name small { letter-spacing:normal; }
+.brand-mark { color:#fff; background:#111; }
+.main-nav button:hover,.main-nav .nav-active { color:#111; border-color:#111; }
+.account-avatar { color:#fff; background:#111; }
+.hero-section { min-height:320px; padding-top:55px; padding-bottom:55px; }
+.hero-section h1 { max-width:760px; font-size:clamp(2.5rem,6vw,5rem); letter-spacing:normal; line-height:1; }
+.hero-section h1 em { color:#111; }
+.hero-section p,.product-content p,.auth-copy p,.admin-box p { line-height:1.5; }
+.hero-link { border-bottom:2px solid #111; }
+.insight-row { border-color:#111; }
+.insight-row>div { border-color:#111; }
+.insight-number,.insight-note strong { color:#111; }
+.filter-panel { padding:0; border:1px solid #111; background:#fff; }
+.search-field,.filter-panel select,.price-range { border:0; border-radius:0; background:#fff; }
+.search-field,.price-range { border-right:1px solid #111; }
+.filter-panel select { border-right:1px solid #111; }
+.filter-clear { color:#111; }
+.product-card { border:1px solid #111; background:#fff; transition:none; }
+.product-card:hover { transform:none; }
+.product-visual,.product-card:nth-child(3n+2) .product-visual,.product-card:nth-child(3n) .product-visual { background:#eee; }
+.product-id,.product-category { color:#555; }
+.product-glyph { color:#bbb; }
+.status-pill,.purchase-status { border:1px solid #111; color:#111; background:#fff; }
+.status-ativo,.status-baixo,.status-esgotado,.status-inativo { color:#111; background:#fff; }
+.buy-button,.btn-avaliar { color:#fff; background:#111; }
+.btn-primario { color:#fff; background:#111; }
+.btn-secundario { color:#111; border-color:#111; }
+.btn-ghost { color:#111; }
+.btn { border-color:#111; }
+.filter-panel input,.filter-panel select,.campo input,.campo select,.campo textarea,.inline-form input { border-radius:0; background:#fff; }
+.campo input:focus,.campo select:focus,.campo textarea:focus { border-color:#111; box-shadow:none; }
+.avaliacoes,.login-callout,.avaliacao,.auth-card,.admin-form,.admin-box,.purchase-card { border:1px solid #111; background:#fff; }
+.auth-screen { min-height:calc(100vh - 78px); }
+.auth-card { border-radius:0; }
+.auth-points { color:#111; }
+.toast { border:1px solid #111; }
+.toast-error { color:#900; background:#fff; }
+.toast-success { color:#111; background:#fff; }
+.empty-state { border-color:#111; }
