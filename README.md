@@ -45,13 +45,15 @@ O catálogo usa outbox com publisher confirms e publica eventos de criação, at
 O backend possui testes de repositórios, serviços, controladores, idempotência, concorrência de estoque e consumidores de eventos. Os testes usam H2. O frontend tem lint, build de produção e verificação das rotas do Nginx.
 
 ```bash
-./mvnw -q test
+./mvnw -q verify
 cd frontend
 npm ci
 npm run lint
 npm run check:nginx
 npm run build
 ```
+
+O ciclo `verify` aplica o limite mínimo de 80% de cobertura de linhas por módulo e gera relatórios JaCoCo em `shared/target/site/jacoco/`, `catalogo/target/site/jacoco/` e `avaliacoes/target/site/jacoco/`. A métrica exclui configuração/bootstrap, seed demonstrativo e classes aninhadas usadas como DTOs.
 
 ## Observabilidade
 

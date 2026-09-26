@@ -35,12 +35,13 @@ public class ProjectionReconciliationService {
     public ProjectionReconciliationService(ProdutoCatalogoRepository produtoRepository,
                                              CompraProdutoRepository compraRepository,
                                              AvaliacaoRepository avaliacaoRepository,
+                                             RestClient.Builder restClientBuilder,
                                              @Value("${app.catalogo.url:http://localhost:8090}") String catalogoUrl,
                                             @Value("${app.internal.secret:pb-at-internal-secret}") String internalSecret) {
         this.produtoRepository = produtoRepository;
         this.compraRepository = compraRepository;
         this.avaliacaoRepository = avaliacaoRepository;
-        this.catalogoClient = RestClient.builder().baseUrl(catalogoUrl).build();
+        this.catalogoClient = restClientBuilder.baseUrl(catalogoUrl).build();
         this.internalSecret = internalSecret;
     }
 
@@ -56,7 +57,7 @@ public class ProjectionReconciliationService {
             sincronizarProdutos(produtos);
             sincronizarCompras(compras);
         } catch (RestClientException exception) {
-            log.warn("Não foi possível reconciliar as projeções com o catálogo", exception);
+            log.warn("Não foi possível reconciliar as projeções com o catálogo: {}", exception.getMessage());
         }
     }
 
