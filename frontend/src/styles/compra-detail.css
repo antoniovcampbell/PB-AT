@@ -1,0 +1,123 @@
+.purchase-detail-page {
+  padding-top: 8px;
+}
+
+.purchase-detail-back {
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+.purchase-detail-back:hover {
+  color: var(--ink);
+}
+
+.purchase-detail-heading {
+  align-items: center;
+  margin-top: 24px;
+}
+
+.purchase-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.purchase-detail-summary article {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+}
+
+.purchase-detail-summary article span,
+.purchase-detail-item > div > span {
+  color: var(--muted);
+  font-size: .68rem;
+}
+
+.purchase-detail-summary article strong {
+  overflow-wrap: anywhere;
+  font-size: .88rem;
+}
+
+.purchase-detail-products {
+  margin-top: 20px;
+}
+
+.purchase-detail-item-list {
+  display: grid;
+}
+
+.purchase-detail-item {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.5fr) repeat(3, minmax(100px, .7fr));
+  align-items: center;
+  gap: 16px;
+  padding: 15px 4px;
+  border-top: 1px solid var(--line);
+}
+
+.purchase-detail-item > div:not(.purchase-detail-product-name) {
+  display: grid;
+  gap: 5px;
+}
+
+.purchase-detail-product-name {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.purchase-detail-product-name strong {
+  overflow-wrap: anywhere;
+}
+
+.purchase-detail-product-name small {
+  color: var(--muted);
+  font-size: .68rem;
+}
+
+@media (max-width: 760px) {
+  .purchase-detail-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .purchase-detail-item {
+    grid-template-columns: minmax(0, 1fr) repeat(2, minmax(90px, .7fr));
+  }
+
+  .purchase-detail-item > div:last-child {
+    grid-column: 2 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .purchase-detail-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .purchase-detail-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .purchase-detail-item {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .purchase-detail-product-name {
+    grid-column: 1 / -1;
+  }
+
+  .purchase-detail-item > div:last-child {
+    grid-column: auto;
+  }
+}
