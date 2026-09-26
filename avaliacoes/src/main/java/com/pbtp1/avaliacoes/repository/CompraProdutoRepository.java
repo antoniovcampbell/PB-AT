@@ -15,4 +15,6 @@ public interface CompraProdutoRepository extends JpaRepository<CompraProduto, Lo
     Optional<CompraProduto> findByCompraIdAndProdutoId(Long compraId, Long produtoId);
 
     List<CompraProduto> findByDemonstracaoTrueAndAtivaTrue();
+
+    List<CompraProduto> findByDemonstracaoTrueAndAtivaTrueOrderByIdAsc();
 }

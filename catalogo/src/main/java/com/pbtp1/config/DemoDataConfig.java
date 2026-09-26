@@ -6,7 +6,10 @@ import com.pbtp1.repository.CategoriaRepository;
 import com.pbtp1.repository.CompraRepository;
 import com.pbtp1.repository.ProdutoRepository;
 import com.pbtp1.service.CompraService;
+import com.pbtp1.service.OutboxService;
 import com.pbtp1.service.ProdutoService;
+import com.pbtp1.shared.messaging.EventoCompra;
+import com.pbtp1.shared.messaging.RabbitMQConstantes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.CommandLineRunner;
@@ -16,6 +19,11 @@ import org.springframework.context.annotation.Configuration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Comparator;
 import java.math.BigDecimal;
 
 @Configuration
@@ -28,6 +36,7 @@ public class DemoDataConfig {
     private final AuthService authService;
     private final CompraService compraService;
     private final CompraRepository compraRepository;
+    private final OutboxService outboxService;
 
     @Bean
     public CommandLineRunner demoDataSeeder() {
@@ -52,11 +61,14 @@ public class DemoDataConfig {
         var produtos = produtoRepository.findAll();
         String[] nomes = {"Ana Clara Martins", "Bruno Almeida", "Camila Souza", "Daniel Oliveira",
                 "Eduarda Lima", "Felipe Santos", "Giovana Rocha", "Heitor Ribeiro",
-                "Isabela Fernandes", "João Pedro Costa"};
+                "Isabela Fernandes", "João Pedro Costa", "Laura Nascimento", "Miguel Barros",
+                "Nina Cardoso", "Pedro Henrique Alves", "Rafaela Campos"};
+        List<Usuario> clientes = new ArrayList<>();
         for (int indice = 1; indice <= nomes.length; indice++) {
             String email = "cliente%02d@pbat.local".formatted(indice);
             Usuario usuario = authService.criarInicial(nomes[indice - 1], email,
                     "cliente123", PerfilUsuario.USER);
+            clientes.add(usuario);
             if (!compraRepository.findByUsuarioIdOrderByCriadaEmDesc(usuario.getId()).isEmpty()) {
                 continue;
             }
@@ -76,6 +88,80 @@ public class DemoDataConfig {
             compraService.criarDemonstracao(usuario.getId(), new CompraService.CompraRequest(
                     java.util.List.of(new CompraService.ItemRequest(produto.getId(), 1))));
         }
+        garantirComprasDemoDasAvaliacoes(clientes);
+    }
+
+    private void garantirComprasDemoDasAvaliacoes(List<Usuario> clientes) {
+        Map<Long, Set<Long>> produtosComprados = new HashMap<>();
+        Map<Long, Usuario> clientesPorId = new HashMap<>();
+        Map<Long, List<Produto>> novosItensPorUsuario = new LinkedHashMap<>();
+        clientes.forEach(cliente -> {
+            produtosComprados.put(cliente.getId(), new HashSet<>());
+            clientesPorId.put(cliente.getId(), cliente);
+        });
+
+        compraRepository.findByDemonstracaoTrueOrderByIdAsc().stream()
+                .filter(compra -> compra.getStatus() != StatusCompra.CANCELADA)
+                .filter(compra -> produtosComprados.containsKey(compra.getUsuarioId()))
+                .forEach(compra -> compra.getItens().forEach(item ->
+                        produtosComprados.get(compra.getUsuarioId()).add(item.getProdutoId())));
+
+        for (Produto produto : produtoRepository.findAll()) {
+            int alvoAvaliacoes = 5 + Math.floorMod(produto.getId().intValue() * 7, 11);
+            int compradores = 0;
+            for (Usuario cliente : clientes) {
+                Set<Long> produtosDoCliente = produtosComprados.get(cliente.getId());
+                if (produtosDoCliente.contains(produto.getId())) {
+                    compradores++;
+                    continue;
+                }
+                if (compradores >= alvoAvaliacoes) continue;
+
+                produtosDoCliente.add(produto.getId());
+                novosItensPorUsuario.computeIfAbsent(cliente.getId(), ignorado -> new ArrayList<>()).add(produto);
+                compradores++;
+            }
+        }
+
+        novosItensPorUsuario.forEach((usuarioId, novosProdutos) ->
+                salvarCompraDemoComProdutos(clientesPorId.get(usuarioId), novosProdutos));
+    }
+
+    private void salvarCompraDemoComProdutos(Usuario usuario, List<Produto> produtos) {
+        String chave = "demo-avaliacoes-%d".formatted(usuario.getId());
+        Compra compra = compraRepository.findByUsuarioIdAndIdempotencyKey(usuario.getId(), chave)
+                .orElseGet(() -> Compra.builder()
+                        .usuarioId(usuario.getId())
+                        .status(StatusCompra.ENTREGUE)
+                        .total(BigDecimal.ZERO)
+                        .criadaEm(java.time.LocalDateTime.now().minusDays(usuario.getId() % 14))
+                        .demonstracao(true)
+                        .idempotencyKey(chave)
+                        .build());
+        Set<Long> itensExistentes = compra.getItens().stream().map(ItemCompra::getProdutoId).collect(java.util.stream.Collectors.toSet());
+        List<ItemCompra> novosItens = produtos.stream()
+                .filter(produto -> !itensExistentes.contains(produto.getId()))
+                .sorted(Comparator.comparing(Produto::getId))
+                .map(produto -> ItemCompra.builder()
+                        .compra(compra)
+                        .produtoId(produto.getId())
+                        .nomeProduto(produto.getNome())
+                        .precoUnitario(produto.getPreco())
+                        .quantidade(1)
+                        .build())
+                .toList();
+        if (novosItens.isEmpty()) return;
+
+        novosItens.forEach(item -> {
+            compra.getItens().add(item);
+            compra.setTotal(compra.getTotal().add(item.getPrecoUnitario()));
+        });
+        Compra salva = compraRepository.save(compra);
+        novosItens.forEach(item -> outboxService.registrar(
+                RabbitMQConstantes.EXCHANGE_COMPRAS,
+                RabbitMQConstantes.ROUTING_KEY_COMPRA_CRIADA,
+                new EventoCompra(salva.getId(), usuario.getId(), item.getProdutoId(), StatusCompra.ENTREGUE.name(),
+                        java.time.LocalDateTime.now(), true, usuario.getNome())));
     }
 
     private Categoria categoria(String nome, String descricao) {

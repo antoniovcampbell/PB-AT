@@ -32,6 +32,10 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, Long> {
 
     long countByProdutoId(Long produtoId);
 
+    long deleteByCompraIdLessThan(Long compraId);
+
+    long deleteByCompraIdIsNullAndComentarioStartingWith(String comentario);
+
     @Query("SELECT ROUND(AVG(a.nota), 2) FROM Avaliacao a WHERE a.produtoId = :produtoId")
     Optional<Double> calcularMediaPorProduto(@Param("produtoId") Long produtoId);
 }

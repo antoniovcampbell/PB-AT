@@ -1,6 +1,7 @@
 package com.pbtp1.avaliacoes.service;
 
 import com.pbtp1.avaliacoes.model.Avaliacao;
+import com.pbtp1.avaliacoes.model.CompraProduto;
 import com.pbtp1.avaliacoes.repository.AvaliacaoRepository;
 import com.pbtp1.avaliacoes.repository.CompraProdutoRepository;
 import com.pbtp1.avaliacoes.repository.ProdutoCatalogoRepository;
@@ -11,7 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -36,64 +38,52 @@ public class DemoAvaliacaoSeeder {
             fixedDelayString = "${app.demo.reviews.fixed-delay-ms:300000}")
     @Transactional
     public void criarAvaliacoes() {
-        compraProdutoRepository.findByDemonstracaoTrueAndAtivaTrue().forEach(compra -> {
-            if (!produtoCatalogoRepository.existsById(compra.getProdutoId())
-                    || avaliacaoRepository.existsByCompraIdAndProdutoId(compra.getCompraId(), compra.getProdutoId())) {
-                return;
-            }
-            int nota = (int) (compra.getProdutoId() % 2) + 4;
-            avaliacaoRepository.save(Avaliacao.builder()
-                    .produtoId(compra.getProdutoId())
-                    .compraId(compra.getCompraId())
-                    .usuarioId(compra.getUsuarioId())
-                    .nomeUsuario(compra.getNomeUsuario() == null ? "Cliente" : compra.getNomeUsuario())
-                    .nota(nota)
-                    .comentario("Produto comprado e aprovado na demonstração.")
-                    .build());
-        });
+        avaliacaoRepository.deleteByCompraIdLessThan(0L);
+        avaliacaoRepository.deleteByCompraIdIsNullAndComentarioStartingWith(
+                "Produto comprado e aprovado na demonstração.");
+        avaliacaoRepository.deleteByCompraIdIsNullAndComentarioStartingWith("Avaliação demonstrativa:");
+        Map<Long, List<CompraProduto>> comprasPorProduto = new HashMap<>();
+        compraProdutoRepository.findByDemonstracaoTrueAndAtivaTrueOrderByIdAsc().stream()
+                .filter(compra -> compra.getCompraId() != null && produtoCatalogoRepository.existsById(compra.getProdutoId()))
+                .forEach(compra -> comprasPorProduto.computeIfAbsent(compra.getProdutoId(), ignorado -> new java.util.ArrayList<>())
+                        .add(compra));
 
-        completarAvaliacoesDoCatalogo();
+        comprasPorProduto.forEach(this::criarOuAtualizarAvaliacoesDemo);
     }
 
-    private void completarAvaliacoesDoCatalogo() {
-        produtoCatalogoRepository.findAll().forEach(produto -> {
-            List<Avaliacao> seedadas = new ArrayList<>(
-                    avaliacaoRepository.findByProdutoIdAndCompraIdLessThanOrderByIdAsc(produto.getId(), 0L));
-            long existentes = avaliacaoRepository.countByProdutoId(produto.getId());
-            int alvo = 5 + Math.floorMod(produto.getId().intValue() * 7, 11);
-            int totalAlvo = Math.max(alvo, Math.toIntExact(existentes));
-            int quantidadeSeedadaAlvo = totalAlvo - Math.toIntExact(existentes - seedadas.size());
-            double mediaDesejada = 2.4 + Math.floorMod(produto.getId().intValue() * 17, 25) / 10.0;
-
-            while (seedadas.size() < quantidadeSeedadaAlvo) {
-                int indice = seedadas.size();
-                long compraDemoId = -(produto.getId() * 100_000L + indice + 1);
-                String nome = NOMES_CLIENTES.get(Math.floorMod(produto.getId().intValue() + indice,
-                        NOMES_CLIENTES.size()));
-                seedadas.add(avaliacaoRepository.save(Avaliacao.builder()
-                        .produtoId(produto.getId())
-                        .compraId(compraDemoId)
-                        .nomeUsuario(nome)
-                        .nota(3)
-                        .comentario(COMENTARIOS_POR_NOTA.get(2))
-                        .build()));
-            }
-
-            for (int indice = 0; indice < seedadas.size(); indice++) {
-                Avaliacao avaliacao = seedadas.get(indice);
-                int nota = notaVariada(mediaDesejada, indice, seedadas.size());
-                String nome = NOMES_CLIENTES.get(Math.floorMod(produto.getId().intValue() + indice,
-                        NOMES_CLIENTES.size()));
-                String comentario = COMENTARIOS_POR_NOTA.get(nota - 1);
-                if (nota != avaliacao.getNota() || !comentario.equals(avaliacao.getComentario())
-                        || !nome.equals(avaliacao.getNomeUsuario())) {
+    private void criarOuAtualizarAvaliacoesDemo(Long produtoId, List<CompraProduto> compras) {
+        double mediaDesejada = 2.4 + Math.floorMod(produtoId.intValue() * 17, 25) / 10.0;
+        for (int indice = 0; indice < compras.size(); indice++) {
+            CompraProduto compra = compras.get(indice);
+            String nomeUsuario = compra.getNomeUsuario() == null || compra.getNomeUsuario().isBlank()
+                    ? "Cliente" : compra.getNomeUsuario();
+            int nota = notaVariada(mediaDesejada, indice, compras.size());
+            String comentario = COMENTARIOS_POR_NOTA.get(nota - 1);
+            var existente = avaliacaoRepository.findByCompraIdAndProdutoId(compra.getCompraId(), produtoId);
+            if (existente.isPresent()) {
+                Avaliacao avaliacao = existente.get();
+                boolean criadaPeloSeed = avaliacao.getComentario() != null
+                        && (avaliacao.getComentario().startsWith("Produto comprado e aprovado na demonstração.")
+                        || avaliacao.getComentario().startsWith("Avaliação demonstrativa:"));
+                if (criadaPeloSeed && (avaliacao.getNota() != nota
+                        || !comentario.equals(avaliacao.getComentario())
+                        || !nomeUsuario.equals(avaliacao.getNomeUsuario()))) {
                     avaliacao.setNota(nota);
                     avaliacao.setComentario(comentario);
-                    avaliacao.setNomeUsuario(nome);
+                    avaliacao.setNomeUsuario(nomeUsuario);
                     avaliacaoRepository.save(avaliacao);
                 }
+                continue;
             }
-        });
+            avaliacaoRepository.save(Avaliacao.builder()
+                    .produtoId(produtoId)
+                    .compraId(compra.getCompraId())
+                    .usuarioId(compra.getUsuarioId())
+                    .nomeUsuario(nomeUsuario)
+                    .nota(nota)
+                    .comentario(comentario)
+                    .build());
+        }
     }
 
     private int notaVariada(double media, int indice, int quantidade) {
