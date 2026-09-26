@@ -1,0 +1,44 @@
+.erro,
+.toast {
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  background: var(--paper);
+}
+
+.erro {
+  margin: 10px 0;
+  padding: 9px;
+  font-size: .7rem;
+}
+
+.toast {
+  position: fixed;
+  top: 82px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  max-width: 380px;
+  padding: 10px 12px;
+  font-size: .72rem;
+}
+
+.toast button {
+  border: 0;
+  background: transparent;
+  font-size: 1rem;
+}
+
+.toast-success {
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  padding: 60px 20px;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  text-align: center;
+}

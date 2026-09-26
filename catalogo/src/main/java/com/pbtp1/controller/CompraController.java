@@ -20,8 +20,9 @@ public class CompraController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CompraService.CompraResponse criar(@RequestHeader("Authorization") String authorization,
+                                               @RequestHeader("Idempotency-Key") String idempotencyKey,
                                                @RequestBody CompraService.CompraRequest request) {
-        return compraService.criar(authService.requireUser(authorization).getId(), request);
+        return compraService.criar(authService.requireUser(authorization).getId(), request, idempotencyKey);
     }
 
     @GetMapping("/minhas")
@@ -41,5 +42,12 @@ public class CompraController {
                                                          @RequestHeader("Authorization") String authorization) {
         authService.requireAdmin(authorization);
         return compraService.atualizarStatus(id, status);
+    }
+
+    @DeleteMapping("/{id}")
+    public CompraService.CompraResponse cancelar(@PathVariable Long id,
+                                                  @RequestHeader("Authorization") String authorization) {
+        authService.requireAdmin(authorization);
+        return compraService.cancelar(id);
     }
 }

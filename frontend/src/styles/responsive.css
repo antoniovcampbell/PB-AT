@@ -1,0 +1,107 @@
+@media (max-width: 900px) {
+  .product-grid,
+  .admin-layout,
+  .admin-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-panel {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .search-field {
+    grid-column: 1 / -1;
+  }
+
+  .auth-screen {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding-block: 12px;
+  }
+
+  .main-nav {
+    order: 3;
+    width: 100%;
+  }
+
+  .main-nav button {
+    padding: 6px 0;
+  }
+
+  .account-name {
+    display: none;
+  }
+
+  .page-wrap {
+    width: calc(100% - 20px);
+  }
+
+  .hero-section {
+    min-height: 280px;
+    padding: 46px 4%;
+  }
+
+  .insight-row,
+  .product-grid,
+  .admin-layout,
+  .admin-columns,
+  .filter-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .insight-row > div,
+  .insight-row > div:first-child {
+    padding: 8px 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .insight-note {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .filter-panel > *,
+  .search-field {
+    grid-column: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .filter-clear {
+    min-height: 40px;
+  }
+
+  .section-heading,
+  .purchase-card,
+  .avaliacoes-header,
+  .login-callout,
+  .footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .purchase-side {
+    justify-items: start;
+  }
+
+  .avaliacoes-form,
+  .form-line {
+    grid-template-columns: 1fr;
+  }
+
+  .campo-full {
+    grid-column: auto;
+  }
+
+  .catalog-section,
+  .dashboard-section {
+    padding-inline: 3%;
+  }
+}

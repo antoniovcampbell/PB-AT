@@ -21,6 +21,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "avaliacoes", uniqueConstraints = @UniqueConstraint(
+        name = "uk_avaliacao_compra_produto", columnNames = {"compra_id", "produto_id"}))
 public class Avaliacao {
 
     @Id
@@ -28,13 +30,17 @@ public class Avaliacao {
     private Long id;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(name = "produto_id", nullable = false)
     private Long produtoId;
+
+    @Column(name = "compra_id")
+    private Long compraId;
 
     @NotBlank
     @Column(nullable = false)
     private String nomeUsuario;
 
+    @Column(name = "usuario_id")
     private Long usuarioId;
 
     @NotNull

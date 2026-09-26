@@ -22,4 +22,12 @@ public class AuthClaimsService {
     public boolean isAdmin(TokenService.Claims claims) {
         return claims != null && "ADMIN".equals(claims.role());
     }
+
+    public TokenService.Claims requireAdmin(String authorization) {
+        TokenService.Claims claims = require(authorization);
+        if (!isAdmin(claims)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso exclusivo para administradores");
+        }
+        return claims;
+    }
 }

@@ -1,3 +1,5 @@
+import '../styles/feedback.css'
+
 function FeedbackToasts({ erro, aviso, onClearErro, onClearAviso }) {
   return <>
     {erro && <div className="toast toast-error">{erro}<button onClick={onClearErro}>×</button></div>}

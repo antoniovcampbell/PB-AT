@@ -9,6 +9,8 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class CompraProdutoListener {
@@ -18,13 +20,28 @@ public class CompraProdutoListener {
             autoStartup = "${app.rabbitmq.listener.auto-startup:true}")
     @Transactional
     public void processar(EventoCompra evento) {
-        if (evento == null || evento.usuarioId() == null || evento.produtoId() == null
-                || repository.existsByUsuarioIdAndProdutoId(evento.usuarioId(), evento.produtoId())) {
+        if (evento == null || evento.compraId() == null || evento.usuarioId() == null || evento.produtoId() == null) {
+            return;
+        }
+
+        Optional<CompraProduto> existente = repository.findByCompraIdAndProdutoId(evento.compraId(), evento.produtoId());
+        if ("CANCELADA".equals(evento.tipo())) {
+            existente.ifPresent(compra -> {
+                compra.setAtiva(false);
+                repository.save(compra);
+            });
+            return;
+        }
+        if (existente.isPresent()) {
             return;
         }
         repository.save(CompraProduto.builder()
+                .compraId(evento.compraId())
                 .usuarioId(evento.usuarioId())
+                .nomeUsuario(evento.nomeUsuario())
                 .produtoId(evento.produtoId())
+                .demonstracao(evento.demonstracao())
+                .ativa(true)
                 .build());
     }
 }

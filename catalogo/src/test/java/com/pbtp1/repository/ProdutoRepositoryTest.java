@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,7 +45,7 @@ class ProdutoRepositoryTest {
                 Produto.builder()
                         .nome("Smartphone")
                         .descricao("Smartphone Android")
-                        .preco(1999.99)
+                        .preco(BigDecimal.valueOf(1999.99))
                         .categoria(categoria)
                         .build()
         );
@@ -53,7 +54,7 @@ class ProdutoRepositoryTest {
                 Produto.builder()
                         .nome("Notebook")
                         .descricao("Notebook 16GB RAM")
-                        .preco(4999.99)
+                        .preco(BigDecimal.valueOf(4999.99))
                         .categoria(categoria)
                         .build()
         );
@@ -62,7 +63,7 @@ class ProdutoRepositoryTest {
                 Produto.builder()
                         .nome("Livro Java")
                         .descricao("Aprenda Java do zero")
-                        .preco(89.90)
+                        .preco(BigDecimal.valueOf(89.90))
                         .categoria(outraCategoria)
                         .build()
         );
@@ -99,7 +100,7 @@ class ProdutoRepositoryTest {
 
     @Test
     void deveBuscarPorFaixaDePreco() {
-        List<Produto> encontrados = produtoRepository.findByPrecoBetween(1000.0, 5000.0);
+        List<Produto> encontrados = produtoRepository.findByPrecoBetween(BigDecimal.valueOf(1000.0), BigDecimal.valueOf(5000.0));
         assertThat(encontrados).hasSize(2);
     }
 
@@ -134,14 +135,14 @@ class ProdutoRepositoryTest {
     @Test
     void deveAtualizarProduto() {
         Produto produto = produtoRepository.findById(produto1.getId()).orElseThrow();
-        produto.setPreco(1499.99);
+        produto.setPreco(BigDecimal.valueOf(1499.99));
         produtoRepository.save(produto);
 
         entityManager.flush();
         entityManager.clear();
 
         Produto atualizado = produtoRepository.findById(produto1.getId()).orElseThrow();
-        assertThat(atualizado.getPreco()).isEqualTo(1499.99);
+        assertThat(atualizado.getPreco()).isEqualByComparingTo("1499.99");
     }
 
     @Test

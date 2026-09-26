@@ -48,6 +48,7 @@ services:
       MANAGEMENT_TRACING_SAMPLING_PROBABILITY: 1.0
       APP_AUTH_SECRET: pb-at-demo-secret-change-in-production
       APP_DEMO_SEED: "true"
+      APP_INTERNAL_SECRET: pb-at-internal-secret
     depends_on:
       postgres:
         condition: service_healthy
@@ -74,6 +75,9 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       MANAGEMENT_TRACING_SAMPLING_PROBABILITY: 1.0
       APP_AUTH_SECRET: pb-at-demo-secret-change-in-production
+      APP_CATALOGO_URL: http://catalogo:8090
+      APP_DEMO_SEED: "true"
+      APP_INTERNAL_SECRET: pb-at-internal-secret
     depends_on:
       postgres:
         condition: service_healthy

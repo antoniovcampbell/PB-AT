@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiFetch } from './api'
+import './styles/reviews.css'
 
-function AvaliacoesPorProduto({ produtoId, aberto = true, auth, onRequireAuth }) {
+function AvaliacoesPorProduto({ produtoId, aberto = true, auth }) {
   const [avaliacoes, setAvaliacoes] = useState([])
   const [media, setMedia] = useState(null)
-  const [nota, setNota] = useState(5)
-  const [comentario, setComentario] = useState('')
   const [erro, setErro] = useState('')
-  const [carregando, setCarregando] = useState(false)
+  const [filtroNota, setFiltroNota] = useState('')
+  const [buscaReview, setBuscaReview] = useState('')
 
   const carregarAvaliacoes = useCallback(async () => {
     try {
+      setErro('')
       const [lista, mediaResposta] = await Promise.all([
         apiFetch(`/api/avaliacoes/produtos/${produtoId}`),
         apiFetch(`/api/avaliacoes/produtos/${produtoId}/media`)
@@ -30,26 +31,6 @@ function AvaliacoesPorProduto({ produtoId, aberto = true, auth, onRequireAuth })
     }
   }, [produtoId, aberto, carregarAvaliacoes])
 
-  async function salvarAvaliacao(event) {
-    event.preventDefault()
-    if (!auth) return onRequireAuth()
-    setErro('')
-    setCarregando(true)
-    try {
-      await apiFetch('/api/avaliacoes', {
-        method: 'POST',
-        body: JSON.stringify({ produtoId, nomeUsuario: auth.usuario.nome, nota, comentario })
-      }, auth.token)
-      setNota(5)
-      setComentario('')
-      await carregarAvaliacoes()
-    } catch (error) {
-      setErro(error.message)
-    } finally {
-      setCarregando(false)
-    }
-  }
-
   async function deletarAvaliacao(id) {
     try {
       await apiFetch(`/api/avaliacoes/${id}`, { method: 'DELETE' }, auth.token)
@@ -60,6 +41,11 @@ function AvaliacoesPorProduto({ produtoId, aberto = true, auth, onRequireAuth })
   }
 
   const mediaFormatada = media?.total > 0 ? `${Number(media.media).toLocaleString('pt-BR')} / 5` : 'Sem avaliações'
+  const avaliacoesFiltradas = useMemo(() => avaliacoes.filter((avaliacao) => {
+    const notaCorresponde = filtroNota === '' || Number(avaliacao.nota) === Number(filtroNota)
+    const texto = `${avaliacao.nomeUsuario} ${avaliacao.comentario || ''}`.toLocaleLowerCase('pt-BR')
+    return notaCorresponde && texto.includes(buscaReview.toLocaleLowerCase('pt-BR'))
+  }), [avaliacoes, filtroNota, buscaReview])
 
   return (
     <div className="avaliacoes">
@@ -68,15 +54,13 @@ function AvaliacoesPorProduto({ produtoId, aberto = true, auth, onRequireAuth })
         <span className="media"><strong>★ {mediaFormatada}</strong><small>{media?.total || 0} avaliações</small></span>
       </div>
       {erro && <p className="erro">{erro}</p>}
-      {auth ? (
-        <form onSubmit={salvarAvaliacao} className="avaliacoes-form">
-          <label className="campo"><span>Sua nota</span><select value={nota} onChange={(event) => setNota(Number(event.target.value))}><option value={5}>5 · Excelente</option><option value={4}>4 · Muito bom</option><option value={3}>3 · Bom</option><option value={2}>2 · Regular</option><option value={1}>1 · Ruim</option></select></label>
-          <label className="campo campo-full"><span>Seu comentário</span><textarea placeholder="O que você achou do produto?" value={comentario} onChange={(event) => setComentario(event.target.value)} maxLength="1000" /></label>
-          <button type="submit" className="btn btn-avaliar" disabled={carregando}>{carregando ? 'Enviando...' : 'Avaliar compra'}</button>
-        </form>
-      ) : <div className="login-callout"><span>🔒</span><p>Comprou este produto? Entre para publicar sua avaliação.</p><button type="button" className="btn btn-secundario" onClick={onRequireAuth}>Entrar para avaliar</button></div>}
+      <div className="reviews-tools">
+        <label><span>Filtrar por nota</span><select value={filtroNota} onChange={(event) => setFiltroNota(event.target.value)}><option value="">Todas as notas</option><option value="5">5 estrelas</option><option value="4">4 estrelas</option><option value="3">3 estrelas</option><option value="2">2 estrelas</option><option value="1">1 estrela</option></select></label>
+        <label className="reviews-search"><span>Buscar avaliação</span><input value={buscaReview} onChange={(event) => setBuscaReview(event.target.value)} placeholder="Nome ou comentário" /></label>
+        <small>{avaliacoesFiltradas.length} de {avaliacoes.length}</small>
+      </div>
       <div className="lista-avaliacoes">
-        {avaliacoes.length === 0 ? <p className="sem-avaliacao">Nenhuma avaliação ainda.</p> : avaliacoes.map((avaliacao) => (
+        {avaliacoes.length === 0 ? <p className="sem-avaliacao">Nenhuma avaliação ainda.</p> : avaliacoesFiltradas.length === 0 ? <p className="sem-avaliacao">Nenhuma avaliação corresponde ao filtro.</p> : avaliacoesFiltradas.map((avaliacao) => (
           <article className="avaliacao" key={avaliacao.id}>
             <div className="avaliacao-cabecalho"><div><strong>{avaliacao.nomeUsuario}</strong><p className="avaliacao-data">{avaliacao.dataCriacao ? new Date(avaliacao.dataCriacao).toLocaleDateString('pt-BR') : ''}</p></div><span className="estrelas">{'★'.repeat(avaliacao.nota)}{'☆'.repeat(5 - avaliacao.nota)}</span></div>
             {avaliacao.comentario && <p>{avaliacao.comentario}</p>}

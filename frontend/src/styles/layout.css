@@ -1,0 +1,76 @@
+.hero-section {
+  min-height: 330px;
+  display: grid;
+  align-items: center;
+  padding: 64px 5%;
+  border-bottom: 1px solid var(--line);
+}
+
+.hero-section h1 {
+  max-width: 760px;
+  margin: 16px 0;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 1;
+}
+
+.hero-section h1 em {
+  font-style: normal;
+}
+
+.hero-section p,
+.auth-copy p,
+.admin-box p {
+  max-width: 470px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.hero-link {
+  display: inline-flex;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 0 0 6px;
+  border-bottom: 2px solid var(--line);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.insight-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) 1.4fr;
+  margin: 0 5% 56px;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.insight-row > div {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 0 18px;
+  border-right: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .72rem;
+}
+
+.insight-row > div:first-child {
+  padding-left: 0;
+}
+
+.insight-number {
+  color: var(--ink);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.insight-note {
+  justify-content: flex-end;
+  text-align: right;
+  line-height: 1.5;
+}
+
+.insight-note strong {
+  color: var(--ink);
+  font-size: .65rem;
+}

@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public record AvaliacaoDTO(
         Long id,
         Long produtoId,
+        Long compraId,
         String nomeUsuario,
         Integer nota,
         String comentario,

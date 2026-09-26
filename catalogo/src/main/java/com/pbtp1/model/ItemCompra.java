@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "itens_compra")
 @Data
@@ -28,7 +30,7 @@ public class ItemCompra {
     private String nomeProduto;
 
     @Column(nullable = false)
-    private Double precoUnitario;
+    private BigDecimal precoUnitario;
 
     @Column(nullable = false)
     private Integer quantidade;

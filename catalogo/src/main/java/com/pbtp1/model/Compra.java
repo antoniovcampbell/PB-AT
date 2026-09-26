@@ -7,11 +7,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "compras")
+@Table(name = "compras", uniqueConstraints = @UniqueConstraint(
+        name = "uk_compra_usuario_idempotency", columnNames = {"usuario_id", "idempotency_key"}))
 @Data
 @Builder
 @NoArgsConstructor
@@ -29,10 +31,15 @@ public class Compra {
     private StatusCompra status;
 
     @Column(nullable = false)
-    private Double total;
+    private BigDecimal total;
 
     @Column(nullable = false)
     private LocalDateTime criadaEm;
+
+    private Boolean demonstracao;
+
+    @Column(name = "idempotency_key", length = 100)
+    private String idempotencyKey;
 
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

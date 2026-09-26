@@ -14,11 +14,21 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, Long> {
 
     List<Avaliacao> findByProdutoId(Long produtoId);
 
+    List<Avaliacao> findByProdutoIdAndCompraIdLessThanOrderByIdAsc(Long produtoId, Long compraId);
+
     List<Avaliacao> findByProdutoIdAndNota(Long produtoId, Integer nota);
 
     List<Avaliacao> findByNota(Integer nota);
 
     boolean existsByProdutoId(Long produtoId);
+
+    boolean existsByCompraIdAndProdutoId(Long compraId, Long produtoId);
+
+    List<Avaliacao> findByUsuarioId(Long usuarioId);
+
+    Optional<Avaliacao> findByCompraIdAndProdutoId(Long compraId, Long produtoId);
+
+    List<Avaliacao> findAllByUsuarioIdAndProdutoId(Long usuarioId, Long produtoId);
 
     long countByProdutoId(Long produtoId);
 
