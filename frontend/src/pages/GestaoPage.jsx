@@ -29,6 +29,7 @@ function GestaoPage({
   onSalvarProduto,
   onLimparFormulario,
   onCriarCategoria,
+  onDeletarCategoria,
   onAtualizarUsuario,
   onAtualizarStatusCompra,
   onCancelarCompra,
@@ -104,7 +105,13 @@ function GestaoPage({
           <div className="admin-box">
             <span className="eyebrow">organização</span><h3>Categorias</h3><p>Organize o catálogo por grupos de produtos.</p>
             <form className="inline-form" onSubmit={onCriarCategoria}><input value={novaCategoria} onChange={(event) => onNovaCategoriaChange(event.target.value)} placeholder="Nova categoria" /><button className="btn btn-secundario">Adicionar</button></form>
-            <div className="category-list">{categorias.map((categoria) => <span key={categoria.id}>{categoria.nome}<small>{produtos.filter((produto) => produto.categoria?.id === categoria.id).length}</small></span>)}</div>
+            <div className="category-list">{categorias.map((categoria) => {
+              const quantidadeProdutos = produtos.filter((produto) => produto.categoria?.id === categoria.id).length
+              return <div className="category-entry" key={categoria.id}>
+                <span className="category-entry-info"><strong>{categoria.nome}</strong><small>{quantidadeProdutos} {quantidadeProdutos === 1 ? 'produto' : 'produtos'}</small></span>
+                <button type="button" className="btn btn-small btn-ghost" disabled={quantidadeProdutos > 0} title={quantidadeProdutos > 0 ? 'Remova ou reclassifique os produtos antes de excluir esta categoria.' : `Remover a categoria ${categoria.nome}`} onClick={() => onDeletarCategoria(categoria)}>Remover</button>
+              </div>
+            })}</div>
           </div>
           <div className="admin-box state-legend">
              <span className="eyebrow">estados do estoque</span><h3>Resumo por disponibilidade</h3>

@@ -61,16 +61,29 @@
   scrollbar-gutter: stable;
 }
 
-.category-list span {
+.category-entry {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 8px;
   padding-bottom: 7px;
   border-bottom: 1px solid var(--line);
   font-size: .72rem;
 }
 
-.category-list small {
+.category-entry-info {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.category-entry-info strong {
+  overflow-wrap: anywhere;
+}
+
+.category-entry-info small {
   color: var(--muted);
+  font-size: .62rem;
 }
 
 .admin-columns {

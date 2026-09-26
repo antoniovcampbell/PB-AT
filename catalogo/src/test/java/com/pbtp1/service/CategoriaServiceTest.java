@@ -1,14 +1,18 @@
 package com.pbtp1.service;
 
 import com.pbtp1.model.Categoria;
+import com.pbtp1.model.Produto;
 import com.pbtp1.repository.CategoriaRepository;
+import com.pbtp1.repository.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,8 +28,15 @@ class CategoriaServiceTest {
     @Autowired
     private CategoriaRepository categoriaRepository;
 
+    @Autowired
+    private ProdutoRepository produtoRepository;
+
+    @Autowired
+    private ProdutoService produtoService;
+
     @BeforeEach
     void setUp() {
+        produtoRepository.deleteAll();
         categoriaRepository.deleteAll();
     }
 
@@ -89,5 +100,22 @@ class CategoriaServiceTest {
     void deveLancarExcecaoAoDeletarIdInexistente() {
         assertThatThrownBy(() -> categoriaService.deletar(999L))
                 .isInstanceOf(EntityNotFoundException.class);
+    }
+
+    @Test
+    void deveImpedirExclusaoDeCategoriaComProdutos() {
+        Categoria categoria = categoriaService.salvar(Categoria.builder().nome("Com produtos").build());
+        produtoService.salvar(Produto.builder()
+                .nome("Produto associado")
+                .descricao("Produto de teste")
+                .preco(BigDecimal.TEN)
+                .estoque(1)
+                .categoria(categoria)
+                .build());
+
+        assertThatThrownBy(() -> categoriaService.deletar(categoria.getId()))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Remova ou reclassifique os produtos");
+        assertThat(categoriaRepository.findById(categoria.getId())).isPresent();
     }
 }

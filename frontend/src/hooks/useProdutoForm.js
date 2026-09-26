@@ -55,7 +55,17 @@ export function useProdutoForm(auth, carregarCatalogo, setErro, setAviso) {
     try { await apiFetch('/api/categorias', { method: 'POST', body: JSON.stringify({ nome: novaCategoria.trim(), descricao: 'Categoria para organizar os produtos do catálogo.' }) }, auth.token); setNovaCategoria(''); await carregarCatalogo(); setAviso('Categoria adicionada ao catálogo.') } catch (error) { setErro(error.message) }
   }
 
+  async function deletarCategoria(categoria) {
+    if (!window.confirm(`Remover a categoria "${categoria.nome}"?`)) return
+    try {
+      await apiFetch(`/api/categorias/${categoria.id}`, { method: 'DELETE' }, auth.token)
+      if (String(categoriaProduto) === String(categoria.id)) setCategoriaProduto('')
+      await carregarCatalogo()
+      setAviso(`Categoria "${categoria.nome}" removida.`)
+    } catch (error) { setErro(error.message) }
+  }
+
   return { editandoId, nome, descricao, preco, estoque, statusProduto, categoriaProduto, novaCategoria,
     setNome, setDescricao, setPreco, setEstoque, setStatusProduto, setCategoriaProduto, setNovaCategoria,
-    editarProduto, deletarProduto, salvarProduto, limparFormulario, criarCategoria }
+    editarProduto, deletarProduto, salvarProduto, limparFormulario, criarCategoria, deletarCategoria }
 }
