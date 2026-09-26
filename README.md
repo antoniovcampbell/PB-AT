@@ -1,6 +1,6 @@
 # PB-AT
 
-Marketplace demonstrativo com catálogo, autenticação, compras e avaliações verificadas, integrado por eventos JSON via RabbitMQ.
+Marketplace demonstrativo com catálogo, autenticação, carrinho e compras; clientes podem publicar avaliações verificadas para cada compra. Os microsserviços se integram por eventos JSON via RabbitMQ.
 
 ## Arquitetura
 
@@ -9,10 +9,10 @@ Marketplace demonstrativo com catálogo, autenticação, compras e avaliações 
 | `catalogo` | 8090 | Produtos, categorias, autenticação, compras e publicação de eventos |
 | `avaliacoes` | 8081 | Avaliações, projeção de produtos e validação de compras |
 | `frontend` | 5173 | Interface React servida pelo Nginx |
-| PostgreSQL | 5432 | Persistência dos microsserviços |
-| RabbitMQ | 5672 | Mensageria entre os microsserviços |
+| PostgreSQL | 5432 (rede Docker) | Persistência dos microsserviços; não publicado no host pelo Compose |
+| RabbitMQ | 5672 (rede Docker), 15672 (host) | Mensageria; console de gerenciamento em `http://localhost:15672` |
 
-O módulo `shared` concentra DTOs, contratos de mensagens e o serviço comum de tokens assinados. Os serviços utilizam H2 em desenvolvimento e PostgreSQL nos ambientes distribuídos.
+O módulo `shared` concentra DTOs, contratos de mensagens e o serviço comum de tokens assinados. Em execução local direta, os serviços usam H2 por padrão; o Docker Compose e os ambientes Kubernetes usam PostgreSQL. No Compose, os serviços se conectam ao banco e ao RabbitMQ pelos nomes internos `postgres` e `rabbitmq`.
 
 ## Funcionalidades
 
@@ -20,30 +20,42 @@ O módulo `shared` concentra DTOs, contratos de mensagens e o serviço comum de 
 - Categorias e estoque associados aos produtos.
 - Estados de produto: `ATIVO`, `ESTOQUE_BAIXO`, `ESGOTADO` e `INATIVO`.
 - Registro e login com perfis `USER` e `ADMIN`.
-- Compras persistidas com itens, total e estado de processamento.
-- Avaliações associadas a usuários e produtos comprados.
-- Operações administrativas para produtos, categorias e compras.
-- Seed demonstrativo com 12 produtos em 5 categorias.
+- Catálogo demonstrativo com 50 produtos, distribuídos em 5 categorias (10 por categoria).
+- Compras idempotentes com controle de estoque e valores monetários em `BigDecimal`.
+- Migrations versionadas com Flyway; o perfil `production` valida o schema com `ddl-auto=validate`.
+- Uma avaliação por produto de cada compra; o formulário fica em “Minhas compras”.
+- A página de produto apresenta as avaliações com filtro por nota, busca textual e lista com rolagem.
+- No ambiente demo, cada produto recebe de 5 a 15 avaliações demonstrativas, com notas variadas de 1 a 5 estrelas.
+- Painel administrativo com indicadores e gestão de produtos, categorias, usuários, compras e avaliações.
 
 ## Frontend
 
-O frontend apresenta o catálogo, o fluxo de autenticação, a área de compras, as avaliações e o painel administrativo. O Nginx encaminha as rotas de produtos, categorias, autenticação, compras e avaliações para os respectivos microsserviços.
+O frontend apresenta o catálogo, autenticação, carrinho, “Minhas compras”, páginas de produto com avaliações e painel administrativo. As avaliações são publicadas a partir da compra correspondente em “Minhas compras”. O Nginx encaminha `/api/produtos`, `/api/categorias`, `/api/auth`, `/api/compras`, `/api/carrinho` e `/api/usuarios` para `catalogo`, e `/api/avaliacoes` para `avaliacoes`. A resolução dinâmica de DNS do Docker permite que o proxy acompanhe a recriação dos containers.
 
 ## APIs
 
-O serviço `catalogo` disponibiliza recursos de autenticação, produtos, categorias e compras. O serviço `avaliacoes` disponibiliza listagem, médias e gerenciamento de avaliações. Operações protegidas utilizam tokens Bearer e autorização baseada no perfil do usuário.
+O serviço `catalogo` disponibiliza autenticação, produtos, categorias, compras, carrinho e usuários. O serviço `avaliacoes` disponibiliza avaliações públicas por produto, médias e avaliações do usuário autenticado. A criação de uma avaliação exige `compraId` e `produtoId` de uma compra ativa pertencente ao usuário; uma segunda avaliação do mesmo produto na mesma compra retorna HTTP `409`. Operações protegidas utilizam tokens Bearer e autorização baseada no perfil do usuário.
 
 ## Mensageria
 
-O catálogo publica eventos de criação, atualização e exclusão de produtos. Compras publicam eventos próprios e atualizações de estoque. O serviço de avaliações consome esses eventos para manter suas projeções e verificar a elegibilidade de avaliações.
+O catálogo usa outbox com publisher confirms e publica eventos de criação, atualização e exclusão de produtos, além de compras e atualizações de estoque. O serviço `avaliacoes` consome esses eventos para manter suas projeções, atualizar nomes dos compradores e verificar a elegibilidade por compra. Consumidores têm retry e filas de dead letter; a reconciliação periódica sincroniza as projeções com o catálogo.
 
 ## Testes
 
-O backend possui testes de repositórios, serviços, controladores e contexto de aplicação. O frontend possui validação de lint e build de produção. Os testes de backend usam H2 e os ambientes distribuídos utilizam PostgreSQL e RabbitMQ.
+O backend possui testes de repositórios, serviços, controladores, idempotência, concorrência de estoque e consumidores de eventos. Os testes usam H2. O frontend tem lint, build de produção e verificação das rotas do Nginx.
+
+```bash
+./mvnw -q test
+cd frontend
+npm ci
+npm run lint
+npm run check:nginx
+npm run build
+```
 
 ## Observabilidade
 
-Os microsserviços expõem healthchecks, probes de disponibilidade, métricas Prometheus, traces OTLP e logs estruturados. Prometheus, Grafana, Loki, Promtail e Jaeger integram a camada de monitoramento e diagnóstico distribuído.
+Os microsserviços expõem healthchecks (`/actuator/health`), probes de disponibilidade, métricas Prometheus, traces OTLP e logs estruturados. Prometheus, Grafana, Loki, Promtail e Jaeger integram a camada de monitoramento e diagnóstico distribuído.
 
 ## Kubernetes
 
@@ -60,6 +72,8 @@ Os manifests em `k8s/` descrevem a execução distribuída no namespace `pb-at`.
 - Probes representam os estados de inicialização, atividade e prontidão dos pods.
 - Kustomize reúne os recursos do ambiente Kubernetes.
 
+Nas implantações de produção, use o perfil `production` e forneça `APP_AUTH_SECRET` e `APP_INTERNAL_SECRET` por meio de secrets reais; o seed demonstrativo fica desabilitado nesse perfil. O Docker Compose local usa intencionalmente o seed demonstrativo.
+
 ## CI/CD
 
 Os workflows do GitHub Actions cobrem testes Maven, lint, build do frontend e publicação das imagens dos serviços no GitHub Container Registry. O conjunto de manifests Kubernetes representa o ambiente de execução da aplicação.
@@ -70,12 +84,14 @@ Os workflows do GitHub Actions cobrem testes Maven, lint, build do frontend e pu
 docker compose up --build -d
 ```
 
+URLs locais: frontend `http://localhost:5173`, catálogo/API `http://localhost:8090`, avaliações/API `http://localhost:8081`, Prometheus `http://localhost:9090`, Grafana `http://localhost:3000` e Jaeger `http://localhost:16686`. O PostgreSQL e a porta AMQP do RabbitMQ ficam acessíveis aos serviços dentro da rede Docker; o console RabbitMQ fica em `http://localhost:15672`.
+
 ### Usuários e Senhas Demonstrativos
 
 | Acesso | Usuário | Senha |
 |---|---|---|
 | Administrador da aplicação | `admin@pbat.local` | `admin123` |
-| Usuário da aplicação | `user@pbat.local` | `user123` |
+| Usuário da aplicação (Antonio Campbell) | `user@pbat.local` | `user123` |
 | RabbitMQ | `antonio` | `admin123` |
 | PostgreSQL | `antonio` | `admin123` |
 

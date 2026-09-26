@@ -7,8 +7,9 @@ Interface React/Vite do marketplace demonstrativo. O catálogo é servido pelo N
 - Catálogo visual com busca, categorias, estados, preços e ordenação.
 - Login e registro de usuários.
 - Área de compras do cliente.
-- Avaliações vinculadas a compras realizadas.
-- Painel administrativo para produtos e categorias.
+- Avaliações limitadas a uma por produto em cada compra, publicadas em “Minhas compras”.
+- Página do produto com avaliações roláveis, filtro por estrelas e busca textual.
+- Painel administrativo para produtos, categorias, usuários, compras e avaliações.
 - Layout responsivo para desktop e mobile.
 
 ## Desenvolvimento
@@ -24,7 +25,8 @@ O proxy do Vite espera `catalogo` em `localhost:8090` e `avaliacoes` em `localho
 
 ```bash
 npm run lint
+npm run check:nginx
 npm run build
 ```
 
-Em Docker, o `Dockerfile` gera o build Vite e o Nginx encaminha `/api/auth`, `/api/categorias`, `/api/compras`, `/api/produtos` e `/api/avaliacoes`.
+Em Docker, o `Dockerfile` gera o build Vite e o Nginx encaminha `/api/auth`, `/api/categorias`, `/api/compras`, `/api/carrinho`, `/api/usuarios`, `/api/produtos` e `/api/avaliacoes`. O proxy usa o DNS interno do Docker para acompanhar a recriação dos serviços.
