@@ -133,10 +133,11 @@ public class DemoDataConfig {
                 .orElseGet(() -> Compra.builder()
                         .usuarioId(usuario.getId())
                         .status(StatusCompra.ENTREGUE)
-                        .total(BigDecimal.ZERO)
-                        .criadaEm(java.time.LocalDateTime.now().minusDays(usuario.getId() % 14))
-                        .demonstracao(true)
-                        .idempotencyKey(chave)
+                         .total(BigDecimal.ZERO)
+                         .criadaEm(java.time.LocalDateTime.now().minusDays(usuario.getId() % 14))
+                         .demonstracao(true)
+                         .estoqueControlado(false)
+                         .idempotencyKey(chave)
                         .build());
         Set<Long> itensExistentes = compra.getItens().stream().map(ItemCompra::getProdutoId).collect(java.util.stream.Collectors.toSet());
         List<ItemCompra> novosItens = produtos.stream()

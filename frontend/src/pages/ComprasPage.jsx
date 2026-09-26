@@ -1,5 +1,6 @@
 import '../styles/commerce.css'
 import AvaliarCompra from '../AvaliarCompra'
+import { STATUS_COMPRA } from './constants'
 
 function ComprasPage({ compras, avaliacoes, auth, formatarPreco, onExplorar, onAvaliacaoSalva }) {
   return (
@@ -16,7 +17,7 @@ function ComprasPage({ compras, avaliacoes, auth, formatarPreco, onExplorar, onA
         {compras.map((compra) => <article className="purchase-card" key={compra.id}>
           <header className="purchase-card-heading">
             <div><span className="eyebrow">compra #{compra.id}</span><small>{new Date(compra.criadaEm).toLocaleString('pt-BR')}</small></div>
-            <div className="purchase-side"><span className="purchase-status">{compra.status}</span><strong>{formatarPreco(compra.total)}</strong></div>
+             <div className="purchase-side"><span className="purchase-status">{STATUS_COMPRA[compra.status] || compra.status}</span><strong>{formatarPreco(compra.total)}</strong></div>
           </header>
           <div className="purchase-items">{compra.itens.map((item) => {
             const avaliacao = avaliacoes.find((review) => Number(review.compraId) === Number(compra.id) && Number(review.produtoId) === Number(item.produtoId))

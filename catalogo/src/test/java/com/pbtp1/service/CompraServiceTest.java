@@ -91,10 +91,30 @@ class CompraServiceTest {
         assertThat(compra.total()).isEqualByComparingTo("35.00");
         assertThat(produtoRepository.findById(primeiro.getId()).orElseThrow().getEstoque()).isEqualTo(1);
         assertThat(produtoRepository.findById(segundo.getId()).orElseThrow().getEstoque()).isEqualTo(3);
+
+        compraService.atualizarStatus(compra.id(), StatusCompra.ENTREGUE);
+
+        assertThat(produtoRepository.findById(primeiro.getId()).orElseThrow().getEstoque()).isEqualTo(1);
+        assertThat(produtoRepository.findById(segundo.getId()).orElseThrow().getEstoque()).isEqualTo(3);
     }
 
     @Test
-    void deveImpedirRegressaoDeStatus() {
+    void deveDevolverEstoqueAoCancelarCompra() {
+        Produto produto = produtoService.salvar(Produto.builder()
+                .nome("Produto cancelado")
+                .preco(BigDecimal.valueOf(19.90))
+                .estoque(2)
+                .build());
+        CompraService.CompraResponse compra = compraService.criar(14L, new CompraService.CompraRequest(
+                List.of(new CompraService.ItemRequest(produto.getId(), 1))), "checkout-14-1");
+
+        compraService.cancelar(compra.id());
+
+        assertThat(produtoRepository.findById(produto.getId()).orElseThrow().getEstoque()).isEqualTo(2);
+    }
+
+    @Test
+    void devePermitirQueAdminAvanceCompraDiretoParaEntregue() {
         Compra compra = compraRepository.save(Compra.builder()
                 .usuarioId(12L)
                 .status(StatusCompra.CRIADA)
@@ -103,8 +123,45 @@ class CompraServiceTest {
                 .idempotencyKey("status-12-1")
                 .build());
 
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> compraService.atualizarStatus(compra.getId(), StatusCompra.ENVIADA))
+        CompraService.CompraResponse atualizada = compraService.atualizarStatus(compra.getId(), StatusCompra.ENTREGUE);
+
+        assertThat(atualizada.status()).isEqualTo(StatusCompra.ENTREGUE.name());
+        assertThat(compraRepository.findById(compra.getId()).orElseThrow().getStatus()).isEqualTo(StatusCompra.ENTREGUE);
+
+        CompraService.CompraResponse corrigida = compraService.atualizarStatus(compra.getId(), StatusCompra.ENVIADA);
+
+        assertThat(corrigida.status()).isEqualTo(StatusCompra.ENVIADA.name());
+    }
+
+    @Test
+    void deveImpedirRegressaoDeStatus() {
+        Compra compra = compraRepository.save(Compra.builder()
+                .usuarioId(13L)
+                .status(StatusCompra.ENVIADA)
+                .total(BigDecimal.ZERO)
+                .criadaEm(LocalDateTime.now())
+                .idempotencyKey("status-13-1")
+                .build());
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> compraService.atualizarStatus(compra.getId(), StatusCompra.PAGA))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Transição de compra inválida");
+    }
+
+    @Test
+    void deveReservarEstoqueAoReabrirCompraCancelada() {
+        Produto produto = produtoService.salvar(Produto.builder()
+                .nome("Produto reaberto")
+                .preco(BigDecimal.valueOf(19.90))
+                .estoque(2)
+                .build());
+        CompraService.CompraResponse compra = compraService.criar(15L, new CompraService.CompraRequest(
+                List.of(new CompraService.ItemRequest(produto.getId(), 1))), "checkout-15-1");
+
+        compraService.cancelar(compra.id());
+        compraService.atualizarStatus(compra.id(), StatusCompra.CRIADA);
+
+        assertThat(produtoRepository.findById(produto.getId()).orElseThrow().getEstoque()).isEqualTo(1);
+        assertThat(compraRepository.findById(compra.id()).orElseThrow().getStatus()).isEqualTo(StatusCompra.CRIADA);
     }
 }

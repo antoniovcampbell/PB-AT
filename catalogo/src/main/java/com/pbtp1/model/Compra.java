@@ -38,6 +38,10 @@ public class Compra {
 
     private Boolean demonstracao;
 
+    @Builder.Default
+    @Column(name = "estoque_controlado", nullable = false)
+    private boolean estoqueControlado = true;
+
     @Column(name = "idempotency_key", length = 100)
     private String idempotencyKey;
 

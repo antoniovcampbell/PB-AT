@@ -33,6 +33,16 @@ public class CompraProdutoListener {
             return;
         }
         if (existente.isPresent()) {
+            if (!"REABERTA".equals(evento.tipo())) {
+                return;
+            }
+            CompraProduto compra = existente.get();
+            compra.setAtiva(true);
+            compra.setDemonstracao(evento.demonstracao());
+            if (evento.nomeUsuario() != null && !evento.nomeUsuario().isBlank()) {
+                compra.setNomeUsuario(evento.nomeUsuario());
+            }
+            repository.save(compra);
             return;
         }
         repository.save(CompraProduto.builder()

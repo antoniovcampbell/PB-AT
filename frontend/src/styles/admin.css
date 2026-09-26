@@ -332,6 +332,17 @@
   overflow-wrap: anywhere;
 }
 
+.admin-row .admin-order-status {
+  min-width: 145px;
+}
+
+.admin-order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
 @media (max-width: 900px) {
   .admin-metrics {
     grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import '../styles/admin.css'
+import { STATUS_COMPRA, TRANSICOES_STATUS_COMPRA } from './constants'
 
 const normalizar = (valor) => String(valor || '').toLocaleLowerCase('pt-BR')
 
@@ -29,7 +30,9 @@ function GestaoPage({
   onLimparFormulario,
   onCriarCategoria,
   onAtualizarUsuario,
+  onAtualizarStatusCompra,
   onCancelarCompra,
+  onVerCompra,
   statusInfo,
   onEditar,
   onDeletar
@@ -44,6 +47,8 @@ function GestaoPage({
   const [estadoFiltroCompra, setEstadoFiltroCompra] = useState('')
   const [buscaAvaliacoes, setBuscaAvaliacoes] = useState('')
   const [notaFiltroAvaliacao, setNotaFiltroAvaliacao] = useState('')
+  const usuariosPorId = useMemo(() => new Map(usuarios.map((usuario) => [String(usuario.id), usuario])), [usuarios])
+  const produtosPorId = useMemo(() => new Map(produtos.map((produto) => [String(produto.id), produto])), [produtos])
   const produtosFiltrados = useMemo(() => produtos.filter((produto) => {
     const textoCorresponde = normalizar(`${produto.nome} ${produto.categoria?.nome || ''}`).includes(normalizar(buscaProdutos))
     const categoriaCorresponde = categoriaFiltroProduto === '' || String(produto.categoria?.id) === categoriaFiltroProduto
@@ -131,7 +136,7 @@ function GestaoPage({
           <label className="admin-filter"><span>Nota</span><select value={notaFiltroAvaliacao} onChange={(event) => setNotaFiltroAvaliacao(event.target.value)}><option value="">Todas</option>{[5, 4, 3, 2, 1].map((nota) => <option key={nota} value={nota}>{nota} estrelas</option>)}</select></label>
         </div>
         {avaliacoes.length === 0 ? <p>Nenhuma avaliação publicada ainda.</p> : <div className="admin-review-list admin-scroll-list">{avaliacoesFiltradas.map((avaliacao) => <article className="admin-review" key={avaliacao.id}>
-          <div><strong>{avaliacao.nomeUsuario}</strong><small>Produto #{avaliacao.produtoId}</small></div>
+          <div><strong>{avaliacao.nomeUsuario}</strong><small>Produto #{avaliacao.produtoId} · {produtosPorId.get(String(avaliacao.produtoId))?.nome || 'Produto removido'}</small></div>
           <span className="estrelas">{'★'.repeat(avaliacao.nota)}{'☆'.repeat(5 - avaliacao.nota)}</span>
           {avaliacao.comentario && <p>{avaliacao.comentario}</p>}
         </article>)}{avaliacoesFiltradas.length === 0 && <p className="admin-empty">Nenhuma avaliação corresponde aos filtros.</p>}</div>}
@@ -150,9 +155,16 @@ function GestaoPage({
           <div className="admin-box-heading"><div><span className="eyebrow">pedidos</span><h3>Compras</h3></div><small className="admin-result-count">{comprasFiltradas.length} de {compras.length} compras</small></div>
           <div className="admin-filterbar admin-order-filters">
             <label className="admin-search"><span>⌕</span><input value={buscaCompras} onChange={(event) => setBuscaCompras(event.target.value)} placeholder="Número ou produto" /></label>
-            <label className="admin-filter"><span>Situação</span><select value={estadoFiltroCompra} onChange={(event) => setEstadoFiltroCompra(event.target.value)}><option value="">Todas</option>{['CRIADA', 'PAGA', 'ENVIADA', 'ENTREGUE', 'CANCELADA'].map((estado) => <option key={estado} value={estado}>{estado}</option>)}</select></label>
+             <label className="admin-filter"><span>Situação</span><select value={estadoFiltroCompra} onChange={(event) => setEstadoFiltroCompra(event.target.value)}><option value="">Todas</option>{Object.entries(STATUS_COMPRA).map(([estado, label]) => <option key={estado} value={estado}>{label}</option>)}</select></label>
           </div>
-          <div className="admin-table admin-scroll-list">{comprasFiltradas.map((compra) => <div className="admin-row" key={compra.id}><span><strong>#{compra.id} · {compra.itens.map((item) => item.nomeProduto).join(', ')}</strong><small>Usuário #{compra.usuarioId} · {compra.status} · {Number(compra.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</small></span>{compra.status !== 'CANCELADA' && compra.status !== 'ENTREGUE' && <button className="btn btn-small btn-ghost" onClick={() => onCancelarCompra(compra.id)}>Cancelar</button>}</div>)}{comprasFiltradas.length === 0 && <p className="admin-empty">Nenhuma compra corresponde aos filtros.</p>}</div>
+          <div className="admin-table admin-scroll-list">{comprasFiltradas.map((compra) => <div className="admin-row" key={compra.id}>
+            <span><strong>Compra #{compra.id}</strong><small>Cliente #{compra.usuarioId} · {usuariosPorId.get(String(compra.usuarioId))?.nome || 'Nome indisponível'} · {compra.itens.length} {compra.itens.length === 1 ? 'produto' : 'produtos'} · {STATUS_COMPRA[compra.status] || compra.status} · {Number(compra.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</small></span>
+            <label className="admin-filter admin-order-status"><span>Atualizar status</span><select aria-label={`Atualizar status da compra ${compra.id}`} value={compra.status} onChange={(event) => onAtualizarStatusCompra(compra.id, event.target.value)}>{(TRANSICOES_STATUS_COMPRA[compra.status] || [compra.status]).map((estado) => <option key={estado} value={estado}>{STATUS_COMPRA[estado] || estado}</option>)}</select></label>
+            <div className="admin-order-actions">
+              <button type="button" className="btn btn-small btn-ghost" aria-label={`Ver informações da compra ${compra.id}`} title="Ver informações da compra" onClick={() => onVerCompra(compra)}>ⓘ Informações</button>
+              {compra.status !== 'CANCELADA' && compra.status !== 'ENTREGUE' && <button type="button" className="btn btn-small btn-ghost" onClick={() => onCancelarCompra(compra.id)}>Cancelar</button>}
+            </div>
+          </div>)}{comprasFiltradas.length === 0 && <p className="admin-empty">Nenhuma compra corresponde aos filtros.</p>}</div>
         </div>
       </div>
     </section>

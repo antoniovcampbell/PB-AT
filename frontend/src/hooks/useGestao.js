@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { apiFetch } from '../api'
+import { STATUS_COMPRA } from '../pages/constants'
 
 export function useGestao(auth, isAdmin, aba, setErro, setAviso, carregarCatalogo) {
   const [avaliacoes, setAvaliacoes] = useState([])
@@ -46,5 +47,13 @@ export function useGestao(auth, isAdmin, aba, setErro, setAviso, carregarCatalog
     } catch (error) { setErro(error.message) }
   }
 
-  return { avaliacoes, usuarios, comprasAdmin, atualizarUsuario, cancelarCompra }
+  async function atualizarStatusCompra(id, status) {
+    try {
+      const compra = await apiFetch(`/api/compras/${id}/status?status=${encodeURIComponent(status)}`, { method: 'PUT' }, auth.token)
+      setComprasAdmin((atual) => atual.map((item) => item.id === id ? compra : item))
+      setAviso(`Compra #${id} atualizada para ${STATUS_COMPRA[status] || status}.`)
+    } catch (error) { setErro(error.message) }
+  }
+
+  return { avaliacoes, usuarios, comprasAdmin, atualizarUsuario, cancelarCompra, atualizarStatusCompra }
 }

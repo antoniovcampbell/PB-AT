@@ -18,4 +18,5 @@ public final class RabbitMQConstantes {
     public static final String ROUTING_KEY_PRODUTO_ATUALIZADO = "produto.atualizado";
     public static final String ROUTING_KEY_PRODUTO_EXCLUIDO = "produto.excluido";
     public static final String ROUTING_KEY_COMPRA_CRIADA = "compra.criada";
+    public static final String ROUTING_KEY_COMPRA_ATUALIZADA = "compra.atualizada";
 }

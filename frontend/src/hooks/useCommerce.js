@@ -3,7 +3,7 @@ import { apiFetch } from '../api'
 
 const CARRINHO_VAZIO = { itens: [], total: 0 }
 
-export function useCommerce(auth, setErro, setAviso) {
+export function useCommerce(auth, setErro, setAviso, carregarCatalogo) {
   const [compras, setCompras] = useState([])
   const [avaliacoesMinhas, setAvaliacoesMinhas] = useState([])
   const [carrinho, setCarrinho] = useState(CARRINHO_VAZIO)
@@ -72,6 +72,7 @@ export function useCommerce(auth, setErro, setAviso) {
       setCarrinho(CARRINHO_VAZIO)
       checkoutKey.current = null
       setAviso(`Pedido #${compra.id} registrado. Acompanhe o status em Minhas compras.`)
+      await carregarCatalogo()
       await carregarCompras()
     } catch (error) { setErro(error.message) }
   }

@@ -21,11 +21,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CompraService {
     private static final Map<StatusCompra, Set<StatusCompra>> TRANSICOES = Map.of(
-            StatusCompra.CRIADA, Set.of(StatusCompra.PAGA, StatusCompra.CANCELADA),
-            StatusCompra.PAGA, Set.of(StatusCompra.ENVIADA, StatusCompra.CANCELADA),
+            StatusCompra.CRIADA, Set.of(StatusCompra.PAGA, StatusCompra.ENVIADA, StatusCompra.ENTREGUE, StatusCompra.CANCELADA),
+            StatusCompra.PAGA, Set.of(StatusCompra.ENVIADA, StatusCompra.ENTREGUE, StatusCompra.CANCELADA),
             StatusCompra.ENVIADA, Set.of(StatusCompra.ENTREGUE, StatusCompra.CANCELADA),
-            StatusCompra.ENTREGUE, Set.of(),
-            StatusCompra.CANCELADA, Set.of());
+            StatusCompra.ENTREGUE, Set.of(StatusCompra.ENVIADA),
+            StatusCompra.CANCELADA, Set.of(StatusCompra.CRIADA));
 
     private final CompraRepository compraRepository;
     private final ProdutoRepository produtoRepository;
@@ -59,14 +59,13 @@ public class CompraService {
         if (request == null || request.itens() == null || request.itens().isEmpty()) {
             throw new IllegalArgumentException("A compra precisa ter pelo menos um produto");
         }
-        String nomeUsuario = usuarioRepository.findById(usuarioId).map(Usuario::getNome).orElse(null);
-
         Compra compra = Compra.builder()
                 .usuarioId(usuarioId)
                 .status(StatusCompra.CRIADA)
                 .total(BigDecimal.ZERO)
                 .criadaEm(LocalDateTime.now())
                 .demonstracao(demonstracao)
+                .estoqueControlado(true)
                 .idempotencyKey(idempotencyKey)
                 .build();
 
@@ -106,10 +105,7 @@ public class CompraService {
 
         compra.setTotal(total);
         Compra salva = compraRepository.save(compra);
-        salva.getItens().forEach(item -> outboxService.registrar(
-                RabbitMQConstantes.EXCHANGE_COMPRAS,
-                RabbitMQConstantes.ROUTING_KEY_COMPRA_CRIADA,
-                new EventoCompra(salva.getId(), usuarioId, item.getProdutoId(), "CRIADA", LocalDateTime.now(), demonstracao, nomeUsuario)));
+        registrarEventosCompra(salva, StatusCompra.CRIADA.name(), RabbitMQConstantes.ROUTING_KEY_COMPRA_CRIADA);
         return paraResponse(salva);
     }
 
@@ -134,8 +130,16 @@ public class CompraService {
         }
         validarTransicao(compra.getStatus(), status);
         if (status == StatusCompra.CANCELADA) return cancelar(compra);
+        if (compra.getStatus() == StatusCompra.CANCELADA && compra.isEstoqueControlado()) {
+            reservarEstoque(compra);
+        }
+        boolean reabrindo = compra.getStatus() == StatusCompra.CANCELADA;
         compra.setStatus(status);
-        return paraResponse(compraRepository.save(compra));
+        Compra salva = compraRepository.save(compra);
+        if (reabrindo) {
+            registrarEventosCompra(salva, "REABERTA", RabbitMQConstantes.ROUTING_KEY_COMPRA_ATUALIZADA);
+        }
+        return paraResponse(salva);
     }
 
     @Transactional
@@ -150,32 +154,57 @@ public class CompraService {
     }
 
     private CompraResponse cancelar(Compra compra) {
-
-        for (ItemCompra item : compra.getItens()) {
-            Produto produto = produtoRepository.findById(item.getProdutoId()).orElse(null);
-            if (produto == null) {
-                continue;
+        if (compra.isEstoqueControlado()) {
+            for (ItemCompra item : compra.getItens()) {
+                Produto produto = produtoRepository.findById(item.getProdutoId()).orElse(null);
+                if (produto == null) {
+                    continue;
+                }
+                int estoque = produto.getEstoque() == null ? 0 : produto.getEstoque();
+                atualizarEstoque(produto, estoque + item.getQuantidade());
             }
-            int estoque = produto.getEstoque() == null ? 0 : produto.getEstoque();
-            produto.setEstoque(estoque + item.getQuantidade());
-            if (produto.getStatus() != StatusProduto.INATIVO) {
-                produto.setStatus(produto.getEstoque() == 0 ? StatusProduto.ESGOTADO
-                        : produto.getEstoque() <= 3 ? StatusProduto.ESTOQUE_BAIXO : StatusProduto.ATIVO);
-            }
-            produtoRepository.save(produto);
-            outboxService.registrar(
-                    RabbitMQConstantes.EXCHANGE_PRODUTOS,
-                    RabbitMQConstantes.ROUTING_KEY_PRODUTO_ATUALIZADO,
-                    produtoService.eventoAtual(produto, "ATUALIZADO"));
         }
         compra.setStatus(StatusCompra.CANCELADA);
         Compra salva = compraRepository.save(compra);
-        salva.getItens().forEach(item -> outboxService.registrar(
-                RabbitMQConstantes.EXCHANGE_COMPRAS,
-                RabbitMQConstantes.ROUTING_KEY_COMPRA_CRIADA,
-                new EventoCompra(salva.getId(), salva.getUsuarioId(), item.getProdutoId(), "CANCELADA", LocalDateTime.now(), false,
-                        usuarioRepository.findById(salva.getUsuarioId()).map(Usuario::getNome).orElse(null))));
+        registrarEventosCompra(salva, StatusCompra.CANCELADA.name(), RabbitMQConstantes.ROUTING_KEY_COMPRA_ATUALIZADA);
         return paraResponse(salva);
+    }
+
+    private void reservarEstoque(Compra compra) {
+        for (ItemCompra item : compra.getItens()) {
+            Produto produto = produtoRepository.findById(item.getProdutoId())
+                    .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado para reabrir a compra: " + item.getProdutoId()));
+            int estoque = produto.getEstoque() == null ? 0 : produto.getEstoque();
+            if (produto.getStatus() == StatusProduto.INATIVO || produto.getStatus() == StatusProduto.ESGOTADO
+                    || estoque < item.getQuantidade()) {
+                throw new IllegalArgumentException("Estoque insuficiente para reabrir a compra: " + produto.getNome());
+            }
+            atualizarEstoque(produto, estoque - item.getQuantidade());
+        }
+    }
+
+    private void atualizarEstoque(Produto produto, int estoque) {
+        produto.setEstoque(estoque);
+        if (produto.getStatus() != StatusProduto.INATIVO) {
+            produto.setStatus(estoque == 0 ? StatusProduto.ESGOTADO
+                    : estoque <= 3 ? StatusProduto.ESTOQUE_BAIXO : StatusProduto.ATIVO);
+        }
+        produtoRepository.save(produto);
+        outboxService.registrar(
+                RabbitMQConstantes.EXCHANGE_PRODUTOS,
+                RabbitMQConstantes.ROUTING_KEY_PRODUTO_ATUALIZADO,
+                produtoService.eventoAtual(produto, "ATUALIZADO"));
+    }
+
+    private void registrarEventosCompra(Compra compra, String tipo, String routingKey) {
+        String nomeUsuario = usuarioRepository.findById(compra.getUsuarioId()).map(Usuario::getNome).orElse(null);
+        boolean demonstracao = Boolean.TRUE.equals(compra.getDemonstracao());
+        LocalDateTime ocorridoEm = LocalDateTime.now();
+        compra.getItens().forEach(item -> outboxService.registrar(
+                RabbitMQConstantes.EXCHANGE_COMPRAS,
+                routingKey,
+                new EventoCompra(compra.getId(), compra.getUsuarioId(), item.getProdutoId(), tipo, ocorridoEm,
+                        demonstracao, nomeUsuario)));
     }
 
     private void validarTransicao(StatusCompra atual, StatusCompra proximo) {

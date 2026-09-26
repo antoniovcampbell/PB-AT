@@ -10,6 +10,7 @@ import { useProdutoForm } from './hooks/useProdutoForm'
 import AutenticacaoPage from './pages/AutenticacaoPage'
 import CarrinhoPage from './pages/CarrinhoPage'
 import CatalogoPage from './pages/CatalogoPage'
+import CompraDetalhePage from './pages/CompraDetalhePage'
 import ComprasPage from './pages/ComprasPage'
 import GestaoPage from './pages/GestaoPage'
 import ProdutoDetalhePage from './pages/ProdutoDetalhePage'
@@ -18,13 +19,14 @@ import { ORDENACOES, STATUS } from './pages/constants'
 function App() {
   const [aba, setAba] = useState('catalogo')
   const [produtoSelecionado, setProdutoSelecionado] = useState(null)
+  const [compraSelecionada, setCompraSelecionada] = useState(null)
   const [erro, setErro] = useState('')
   const [aviso, setAviso] = useState('')
   const { auth, autenticar: salvarSessao, sair, authMode, setAuthMode, mostrarAuth, setMostrarAuth, abrirAutenticacao } = useAuth()
   const isAdmin = auth?.usuario?.perfil === 'ADMIN'
   const catalogo = useCatalogo(setErro)
   const produtoForm = useProdutoForm(auth, catalogo.carregar, setErro, setAviso)
-  const commerce = useCommerce(auth, setErro, setAviso)
+  const commerce = useCommerce(auth, setErro, setAviso, catalogo.carregar)
   const gestao = useGestao(auth, isAdmin, aba, setErro, setAviso, catalogo.carregar)
 
   function autenticar(resposta) {
@@ -36,6 +38,7 @@ function App() {
     sair()
     setAba('catalogo')
     setProdutoSelecionado(null)
+    setCompraSelecionada(null)
     abrirAutenticacao('login')
   }
 
@@ -46,15 +49,17 @@ function App() {
   function navegar(novaAba) {
     setAba(novaAba)
     setProdutoSelecionado(null)
+    setCompraSelecionada(null)
     setMostrarAuth(false)
   }
 
   function renderPagina() {
     if (mostrarAuth) return <AutenticacaoPage mode={authMode} onModeChange={setAuthMode} onAuthenticated={autenticar} />
     if (produtoSelecionado) return <ProdutoDetalhePage produto={produtoSelecionado} auth={auth} formatarPreco={formatarPreco} statusInfo={catalogo.statusInfo} onVoltar={() => setProdutoSelecionado(null)} onComprar={(produto) => commerce.adicionarAoCarrinho(produto, () => abrirAutenticacao('login'))} />
+    if (aba === 'gestao' && isAdmin && compraSelecionada) return <CompraDetalhePage compra={compraSelecionada} formatarPreco={formatarPreco} onVoltar={() => setCompraSelecionada(null)} />
     if (aba === 'compras') return <ComprasPage compras={commerce.compras} avaliacoes={commerce.avaliacoesMinhas} auth={auth} formatarPreco={formatarPreco} onExplorar={() => navegar('catalogo')} onAvaliacaoSalva={commerce.carregarCompras} />
     if (aba === 'carrinho') return <CarrinhoPage carrinho={commerce.carrinho} formatarPreco={formatarPreco} onAtualizar={commerce.atualizarCarrinho} onRemover={commerce.removerCarrinho} onFinalizar={commerce.finalizarCarrinho} onExplorar={() => navegar('catalogo')} />
-    if (aba === 'gestao' && isAdmin) return <GestaoPage categorias={catalogo.categorias} produtos={catalogo.produtos} avaliacoes={gestao.avaliacoes} usuarios={gestao.usuarios} compras={gestao.comprasAdmin} status={STATUS} {...produtoForm} onNomeChange={produtoForm.setNome} onDescricaoChange={produtoForm.setDescricao} onPrecoChange={produtoForm.setPreco} onEstoqueChange={produtoForm.setEstoque} onStatusProdutoChange={produtoForm.setStatusProduto} onCategoriaProdutoChange={produtoForm.setCategoriaProduto} onNovaCategoriaChange={produtoForm.setNovaCategoria} onSalvarProduto={produtoForm.salvarProduto} onLimparFormulario={produtoForm.limparFormulario} onCriarCategoria={produtoForm.criarCategoria} onAtualizarUsuario={gestao.atualizarUsuario} onCancelarCompra={gestao.cancelarCompra} onEditar={produtoForm.editarProduto} onDeletar={produtoForm.deletarProduto} statusInfo={catalogo.statusInfo} />
+    if (aba === 'gestao' && isAdmin) return <GestaoPage categorias={catalogo.categorias} produtos={catalogo.produtos} avaliacoes={gestao.avaliacoes} usuarios={gestao.usuarios} compras={gestao.comprasAdmin} status={STATUS} {...produtoForm} onNomeChange={produtoForm.setNome} onDescricaoChange={produtoForm.setDescricao} onPrecoChange={produtoForm.setPreco} onEstoqueChange={produtoForm.setEstoque} onStatusProdutoChange={produtoForm.setStatusProduto} onCategoriaProdutoChange={produtoForm.setCategoriaProduto} onNovaCategoriaChange={produtoForm.setNovaCategoria} onSalvarProduto={produtoForm.salvarProduto} onLimparFormulario={produtoForm.limparFormulario} onCriarCategoria={produtoForm.criarCategoria} onAtualizarUsuario={gestao.atualizarUsuario} onAtualizarStatusCompra={gestao.atualizarStatusCompra} onCancelarCompra={gestao.cancelarCompra} onVerCompra={setCompraSelecionada} onEditar={produtoForm.editarProduto} onDeletar={produtoForm.deletarProduto} statusInfo={catalogo.statusInfo} />
     return <CatalogoPage produtos={catalogo.produtos} produtosFiltrados={catalogo.produtosFiltrados} categorias={catalogo.categorias} auth={auth} isAdmin={isAdmin} busca={catalogo.busca} categoriaId={catalogo.categoriaId} status={catalogo.status} precoMin={catalogo.precoMin} precoMax={catalogo.precoMax} ordenacao={catalogo.ordenacao} statusOptions={STATUS} ordenacoes={ORDENACOES} formatarPreco={formatarPreco} statusInfo={catalogo.statusInfo} onBuscaChange={catalogo.setBusca} onCategoriaChange={catalogo.setCategoriaId} onStatusChange={catalogo.setStatus} onPrecoMinChange={catalogo.setPrecoMin} onPrecoMaxChange={catalogo.setPrecoMax} onOrdenacaoChange={catalogo.setOrdenacao} onLimparFiltros={catalogo.limparFiltros} onComprar={(produto) => commerce.adicionarAoCarrinho(produto, () => abrirAutenticacao('login'))} onSelecionarProduto={setProdutoSelecionado} onEditar={produtoForm.editarProduto} onDeletar={produtoForm.deletarProduto} />
   }
 

@@ -57,4 +57,22 @@ class CompraProdutoListenerTest {
         verify(repository).save(compra);
         org.assertj.core.api.Assertions.assertThat(compra.getAtiva()).isFalse();
     }
+
+    @Test
+    void deveReativarCompraQuandoForReabertaPeloAdministrador() {
+        CompraProduto compra = CompraProduto.builder()
+                .compraId(1L)
+                .usuarioId(2L)
+                .produtoId(3L)
+                .demonstracao(true)
+                .ativa(false)
+                .build();
+        when(repository.findByCompraIdAndProdutoId(1L, 3L)).thenReturn(Optional.of(compra));
+
+        listener.processar(new EventoCompra(1L, 2L, 3L, "REABERTA", LocalDateTime.now(), true, "Ana"));
+
+        verify(repository).save(compra);
+        org.assertj.core.api.Assertions.assertThat(compra.getAtiva()).isTrue();
+        org.assertj.core.api.Assertions.assertThat(compra.getNomeUsuario()).isEqualTo("Ana");
+    }
 }

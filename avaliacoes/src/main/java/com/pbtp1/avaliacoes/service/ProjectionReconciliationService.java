@@ -115,6 +115,7 @@ public class ProjectionReconciliationService {
             }
             if (existente.isPresent()) {
                 existente.ifPresent(compra -> {
+                    compra.setAtiva(true);
                     if (nomeUsuario != null && !nomeUsuario.isBlank()) compra.setNomeUsuario(nomeUsuario);
                 });
                 existente.ifPresent(compraRepository::save);
