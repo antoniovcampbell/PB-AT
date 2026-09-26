@@ -1,3 +1,5 @@
+import '../styles/header.css'
+
 function SiteHeader({ auth, isAdmin, aba, onNavigate, onBrandClick, onShowAuth, onLogout }) {
   return (
     <header className="topbar">
@@ -7,7 +9,8 @@ function SiteHeader({ auth, isAdmin, aba, onNavigate, onBrandClick, onShowAuth, 
       </button>
       <nav className="main-nav">
         <button className={aba === 'catalogo' ? 'nav-active' : ''} onClick={() => onNavigate('catalogo')}>Explorar</button>
-        {auth && <button className={aba === 'compras' ? 'nav-active' : ''} onClick={() => onNavigate('compras')}>Minhas compras</button>}
+         {auth && <button className={aba === 'compras' ? 'nav-active' : ''} onClick={() => onNavigate('compras')}>Minhas compras</button>}
+         {auth && <button className={aba === 'carrinho' ? 'nav-active' : ''} onClick={() => onNavigate('carrinho')}>Carrinho</button>}
         {isAdmin && <button className={aba === 'gestao' ? 'nav-active' : ''} onClick={() => onNavigate('gestao')}>Gestão</button>}
       </nav>
       <div className="account-area">

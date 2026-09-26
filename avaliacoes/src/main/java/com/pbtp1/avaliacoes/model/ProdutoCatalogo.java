@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "produto_catalogo")
@@ -25,7 +26,7 @@ public class ProdutoCatalogo {
 
     private String descricao;
 
-    private Double preco;
+    private BigDecimal preco;
 
     private Integer estoque;
 

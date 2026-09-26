@@ -8,10 +8,11 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     List<Produto> findByNomeContainingIgnoreCase(String nome);
-    List<Produto> findByPrecoBetween(Double min, Double max);
+    List<Produto> findByPrecoBetween(BigDecimal min, BigDecimal max);
     List<Produto> findByCategoriaId(Long categoriaId);
     List<Produto> findByCategoriaNomeIgnoreCase(String nome);
     Optional<Produto> findByNomeIgnoreCase(String nome);

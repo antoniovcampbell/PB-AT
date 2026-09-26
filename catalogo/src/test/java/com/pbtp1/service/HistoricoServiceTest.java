@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,7 +44,7 @@ class HistoricoServiceTest {
                 Produto.builder()
                         .nome("Produto Auditado")
                         .descricao("Versao inicial")
-                        .preco(100.0)
+                        .preco(BigDecimal.valueOf(100.0))
                         .categoria(categoria)
                         .build()
         );
@@ -63,13 +64,13 @@ class HistoricoServiceTest {
                 Produto.builder()
                         .nome("Produto Auditado")
                         .descricao("Versao inicial")
-                        .preco(100.0)
+                        .preco(BigDecimal.valueOf(100.0))
                         .categoria(categoria)
                         .build()
         );
 
         produto.setNome("Produto Modificado");
-        produto.setPreco(200.0);
+        produto.setPreco(BigDecimal.valueOf(200.0));
         produtoRepository.save(produto);
 
         List<?> revisoes = historicoService.listarRevisoesProduto(produto.getId());
@@ -87,7 +88,7 @@ class HistoricoServiceTest {
                 Produto.builder()
                         .nome("Produto Deletado")
                         .descricao("Sera deletado")
-                        .preco(50.0)
+                        .preco(BigDecimal.valueOf(50.0))
                         .categoria(categoria)
                         .build()
         );
@@ -109,13 +110,13 @@ class HistoricoServiceTest {
                 Produto.builder()
                         .nome("Produto Auditado")
                         .descricao("Versao inicial")
-                        .preco(100.0)
+                        .preco(BigDecimal.valueOf(100.0))
                         .categoria(categoria)
                         .build()
         );
 
         produto.setNome("Nome Alterado");
-        produto.setPreco(999.99);
+        produto.setPreco(BigDecimal.valueOf(999.99));
         produtoRepository.save(produto);
 
         List<?> revisoes = historicoService.listarRevisoesProduto(produto.getId());
@@ -139,11 +140,11 @@ class HistoricoServiceTest {
         );
 
         produtoRepository.save(
-                Produto.builder().nome("Produto 1").descricao("Teste 1").preco(50.0).categoria(categoria).build()
+                Produto.builder().nome("Produto 1").descricao("Teste 1").preco(BigDecimal.valueOf(50.0)).categoria(categoria).build()
         );
 
         produtoRepository.save(
-                Produto.builder().nome("Produto 2").descricao("Teste 2").preco(150.0).categoria(categoria).build()
+                Produto.builder().nome("Produto 2").descricao("Teste 2").preco(BigDecimal.valueOf(150.0)).categoria(categoria).build()
         );
 
         List<?> todasRevisoes = historicoService.listarTodasRevisoes();

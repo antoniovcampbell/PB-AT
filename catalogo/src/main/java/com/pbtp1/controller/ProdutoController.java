@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/produtos")
@@ -31,8 +32,8 @@ public class ProdutoController {
     @GetMapping("/busca")
     public List<Produto> buscar(
             @RequestParam(required = false) String nome,
-            @RequestParam(required = false) Double precoMin,
-            @RequestParam(required = false) Double precoMax,
+            @RequestParam(required = false) BigDecimal precoMin,
+            @RequestParam(required = false) BigDecimal precoMax,
             @RequestParam(required = false) Long categoriaId,
             @RequestParam(required = false) String termo) {
 

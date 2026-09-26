@@ -1,0 +1,135 @@
+.purchase-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.purchase-card {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.purchase-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.purchase-card-heading > div:first-child,
+.purchase-item-name {
+  display: grid;
+  gap: 6px;
+}
+
+.purchase-card-heading small,
+.purchase-item-name small {
+  color: var(--muted);
+  font-size: .7rem;
+}
+
+.purchase-items {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+
+.purchase-item-review {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.purchase-review form {
+  display: grid;
+  grid-template-columns: minmax(130px, .6fr) minmax(220px, 1.5fr) auto;
+  align-items: end;
+  gap: 10px;
+  width: min(760px, 100%);
+}
+
+.purchase-review form .form-actions {
+  flex-wrap: wrap;
+}
+
+.purchase-review .erro {
+  grid-column: 1 / -1;
+}
+
+.purchase-review-done {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: .72rem;
+}
+
+.review-unavailable {
+  color: var(--muted);
+  font-size: .7rem;
+}
+
+.purchase-side {
+  display: grid;
+  justify-items: end;
+  gap: 7px;
+}
+
+.cart-list,
+.admin-table {
+  display: grid;
+  gap: 10px;
+}
+
+.cart-item,
+.cart-summary,
+.admin-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.cart-item h3 {
+  margin: 7px 0;
+}
+
+.cart-controls,
+.cart-summary,
+.admin-row {
+  flex-wrap: wrap;
+}
+
+.cart-controls label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: .7rem;
+}
+
+.cart-controls input {
+  width: 72px;
+  padding: 8px;
+  border: 1px solid var(--line);
+}
+
+.cart-summary {
+  margin-top: 18px;
+  border-bottom: 0;
+}
+
+.cart-summary span {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+}
+
+.cart-summary strong {
+  color: var(--ink);
+  font-size: 1.4rem;
+}

@@ -1,0 +1,88 @@
+.topbar {
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 0 clamp(16px, 4vw, 48px);
+  border-bottom: 2px solid var(--line);
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  color: var(--ink);
+  text-align: left;
+}
+
+.brand-mark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  color: #fff;
+  background: var(--ink);
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+.brand > span:last-child,
+.account-name {
+  display: grid;
+  gap: 3px;
+  line-height: 1.1;
+}
+
+.brand strong {
+  font-size: 1rem;
+}
+
+.brand small,
+.account-name small,
+.product-bottom small,
+.purchase-card small,
+.auth-card-header small {
+  color: var(--muted);
+  font-size: .65rem;
+}
+
+.main-nav {
+  display: flex;
+  flex: 1;
+  gap: 22px;
+}
+
+.main-nav button {
+  padding: 25px 0 20px;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.main-nav button:hover,
+.main-nav .nav-active {
+  border-bottom-color: var(--line);
+  color: var(--ink);
+}
+
+.account-area {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.account-avatar {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: #fff;
+  background: var(--ink);
+  font-weight: 700;
+}

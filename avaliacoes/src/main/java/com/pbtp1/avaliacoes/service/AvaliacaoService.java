@@ -5,6 +5,7 @@ import com.pbtp1.avaliacoes.repository.ProdutoCatalogoRepository;
 import com.pbtp1.avaliacoes.repository.AvaliacaoRepository;
 import com.pbtp1.shared.dto.AvaliacaoDTO;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,10 @@ public class AvaliacaoService {
         return avaliacaoRepository.findAll().stream().map(this::paraDTO).toList();
     }
 
+    public List<AvaliacaoDTO> listarDoUsuario(Long usuarioId) {
+        return avaliacaoRepository.findByUsuarioId(usuarioId).stream().map(this::paraDTO).toList();
+    }
+
     public List<AvaliacaoDTO> listarPorProduto(Long produtoId) {
         return avaliacaoRepository.findByProdutoId(produtoId).stream().map(this::paraDTO).toList();
     }
@@ -46,9 +51,19 @@ public class AvaliacaoService {
     }
 
     @Transactional
-    public AvaliacaoDTO salvar(Avaliacao avaliacao) {
+    public AvaliacaoDTO salvar(Avaliacao avaliacao, Long usuarioId) {
         validarProduto(avaliacao.getProdutoId());
-        return paraDTO(avaliacaoRepository.save(avaliacao));
+        if (avaliacao.getCompraId() == null) {
+            throw new EntityNotFoundException("Informe a compra relacionada à avaliação");
+        }
+        avaliacao.setUsuarioId(usuarioId);
+        if (avaliacaoRepository.existsByCompraIdAndProdutoId(avaliacao.getCompraId(), avaliacao.getProdutoId()))
+            throw new DataIntegrityViolationException("Este produto desta compra já foi avaliado");
+        try {
+            return paraDTO(avaliacaoRepository.save(avaliacao));
+        } catch (DataIntegrityViolationException exception) {
+            throw new DataIntegrityViolationException("Este produto desta compra já foi avaliado", exception);
+        }
     }
 
     @Transactional
@@ -89,6 +104,7 @@ public class AvaliacaoService {
         return new AvaliacaoDTO(
                 a.getId(),
                 a.getProdutoId(),
+                a.getCompraId(),
                 a.getNomeUsuario(),
                 a.getNota(),
                 a.getComentario(),

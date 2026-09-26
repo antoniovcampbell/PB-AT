@@ -1,9 +1,7 @@
 package com.pbtp1.config;
 
 import com.pbtp1.shared.messaging.RabbitMQConstantes;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -25,18 +23,13 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue produtosQueue() {
-        return new Queue(RabbitMQConstantes.FILA_PRODUTOS, true);
-    }
-
-    @Bean
-    public Binding produtosBinding(Queue produtosQueue, TopicExchange produtosExchange) {
-        return BindingBuilder.bind(produtosQueue).to(produtosExchange).with("produto.*");
-    }
-
-    @Bean
     public JacksonJsonMessageConverter jacksonMessageConverter() {
         return new JacksonJsonMessageConverter();
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper().findAndRegisterModules();
     }
 
     @Bean
@@ -44,6 +37,7 @@ public class RabbitMQConfig {
                                          JacksonJsonMessageConverter messageConverter) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(messageConverter);
+        template.setMandatory(true);
         return template;
     }
 }

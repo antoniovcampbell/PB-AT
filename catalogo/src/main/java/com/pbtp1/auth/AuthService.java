@@ -15,6 +15,7 @@ import javax.crypto.spec.PBEKeySpec;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -47,13 +48,20 @@ public class AuthService {
         if (!matches(senha, usuario.getSenhaHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciais inválidas");
         }
+        if (Boolean.FALSE.equals(usuario.getAtivo())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário desativado");
+        }
         return resposta(usuario);
     }
 
     public Usuario requireUser(String authorization) {
         TokenService.Claims claims = claims(authorization);
-        return usuarioRepository.findById(claims.id())
+        Usuario usuario = usuarioRepository.findById(claims.id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não encontrado"));
+        if (Boolean.FALSE.equals(usuario.getAtivo())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário desativado");
+        }
+        return usuario;
     }
 
     public Usuario requireAdmin(String authorization) {
@@ -74,6 +82,13 @@ public class AuthService {
 
     public Usuario criarInicial(String nome, String email, String senha, PerfilUsuario perfil) {
         return usuarioRepository.findByEmailIgnoreCase(email)
+                .map(usuario -> {
+                    if (!nome.equals(usuario.getNome())) {
+                        usuario.setNome(nome);
+                        return usuarioRepository.save(usuario);
+                    }
+                    return usuario;
+                })
                 .orElseGet(() -> usuarioRepository.save(Usuario.builder()
                         .nome(nome)
                         .email(email.toLowerCase())
@@ -82,10 +97,30 @@ public class AuthService {
                         .build()));
     }
 
+    public List<UsuarioAdminResponse> listarUsuarios() {
+        return usuarioRepository.findAll().stream()
+                .map(usuario -> new UsuarioAdminResponse(usuario.getId(), usuario.getNome(), usuario.getEmail(),
+                        usuario.getPerfil().name(), !Boolean.FALSE.equals(usuario.getAtivo())))
+                .toList();
+    }
+
+    public UsuarioAdminResponse atualizarAtivo(Long id, boolean ativo) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+        if (usuario.getPerfil() == PerfilUsuario.ADMIN && !ativo) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Administradores não podem ser desativados");
+        }
+        usuario.setAtivo(ativo);
+        usuarioRepository.save(usuario);
+        return new UsuarioAdminResponse(usuario.getId(), usuario.getNome(), usuario.getEmail(),
+                usuario.getPerfil().name(), ativo);
+    }
+
     private AuthResponse resposta(Usuario usuario) {
         return new AuthResponse(
                 TokenService.issue(usuario.getId(), usuario.getEmail(), usuario.getNome(), usuario.getPerfil().name(), secret),
-                new UsuarioResponse(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil().name()));
+                new UsuarioResponse(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil().name(),
+                !Boolean.FALSE.equals(usuario.getAtivo())));
     }
 
     private void validarCadastro(String nome, String email, String senha) {
@@ -123,6 +158,9 @@ public class AuthService {
     public record AuthResponse(String token, UsuarioResponse usuario) {
     }
 
-    public record UsuarioResponse(Long id, String nome, String email, String perfil) {
+    public record UsuarioResponse(Long id, String nome, String email, String perfil, boolean ativo) {
+    }
+
+    public record UsuarioAdminResponse(Long id, String nome, String email, String perfil, boolean ativo) {
     }
 }

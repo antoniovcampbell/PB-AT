@@ -35,6 +35,8 @@ spec:
             - secretRef:
                 name: pb-at-secrets
           env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production
             - name: SPRING_APPLICATION_NAME
               value: avaliacoes
             - name: SPRING_DATASOURCE_URL

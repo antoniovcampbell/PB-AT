@@ -9,7 +9,11 @@ public final class RabbitMQConstantes {
     public static final String FILA_PRODUTOS = "avaliacoes.catalogo.produtos.queue";
     public static final String EXCHANGE_COMPRAS = "catalogo.compras.exchange";
     public static final String FILA_COMPRAS = "avaliacoes.catalogo.compras.queue";
-
+    public static final String EXCHANGE_DEAD_LETTERS = "catalogo.dead-letter.exchange";
+    public static final String FILA_PRODUTOS_DEAD_LETTERS = "avaliacoes.catalogo.produtos.dlq";
+    public static final String FILA_COMPRAS_DEAD_LETTERS = "avaliacoes.catalogo.compras.dlq";
+    public static final String ROUTING_KEY_PRODUTOS_DEAD_LETTERS = "produto.dead-letter";
+    public static final String ROUTING_KEY_COMPRAS_DEAD_LETTERS = "compra.dead-letter";
     public static final String ROUTING_KEY_PRODUTO_CRIADO = "produto.criado";
     public static final String ROUTING_KEY_PRODUTO_ATUALIZADO = "produto.atualizado";
     public static final String ROUTING_KEY_PRODUTO_EXCLUIDO = "produto.excluido";

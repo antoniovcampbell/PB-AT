@@ -1,4 +1,4 @@
-import AvaliacoesPorProduto from '../AvaliacoesPorProduto'
+import '../styles/catalog.css'
 
 function CatalogoPage({
   produtos,
@@ -12,7 +12,6 @@ function CatalogoPage({
   precoMin,
   precoMax,
   ordenacao,
-  avaliacoesAbertas,
   statusOptions,
   ordenacoes,
   formatarPreco,
@@ -25,10 +24,9 @@ function CatalogoPage({
   onOrdenacaoChange,
   onLimparFiltros,
   onComprar,
+  onSelecionarProduto,
   onEditar,
   onDeletar,
-  onToggleAvaliacoes,
-  onRequireAuth
 }) {
   return <>
     <section className="hero-section"><div><span className="eyebrow">coleção de setembro · 2026</span><h1>Escolhas boas para<br /><em>dias mais leves.</em></h1><p>Produtos selecionados, preços claros e avaliações de quem realmente comprou.</p><button className="hero-link" onClick={() => document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' })}>Ver coleção <span>↓</span></button></div></section>
@@ -46,11 +44,10 @@ function CatalogoPage({
       <div className="product-grid">
         {produtosFiltrados.length === 0 ? <div className="empty-state"><span>◌</span><h3>Nenhuma escolha por aqui</h3><p>Remova alguns filtros para abrir o catálogo.</p></div> : produtosFiltrados.map((produto) => {
           const info = statusInfo(produto)
-          return <article className="product-card" key={produto.id}>
+           return <article className="product-card" key={produto.id} role="button" tabIndex="0" onClick={(event) => { if (!event.target.closest('button, input, select, textarea')) onSelecionarProduto(produto) }} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && event.target === event.currentTarget) { event.preventDefault(); onSelecionarProduto(produto) } }}>
             <div className="product-visual"><span className="product-id">#{String(produto.id).padStart(2, '0')}</span><span className={`status-pill ${info.className}`}>{info.label}</span><div className="product-glyph">{produto.nome.charAt(0)}</div><span className="product-category">{produto.categoria?.nome || 'Coleção PB'}</span></div>
-            <div className="product-content"><h3>{produto.nome}</h3><p>{produto.descricao}</p><div className="product-bottom"><div><strong>{formatarPreco(produto.preco)}</strong><small>{produto.estoque > 0 ? `${produto.estoque} em estoque` : 'Sem estoque'}</small></div><button className="buy-button" disabled={info.className !== 'status-ativo' && info.className !== 'status-baixo'} onClick={() => onComprar(produto)}>{auth ? 'Comprar' : 'Entrar para comprar'} <span>↗</span></button></div></div>
-            <div className="product-actions">{isAdmin && <><button onClick={() => onEditar(produto)}>Editar</button><button onClick={() => onDeletar(produto.id)}>Excluir</button></>}<button onClick={() => onToggleAvaliacoes(produto.id)}>{avaliacoesAbertas[produto.id] ? 'Fechar avaliações' : 'Ver avaliações'}</button></div>
-            {avaliacoesAbertas[produto.id] && <AvaliacoesPorProduto produtoId={produto.id} auth={auth} onRequireAuth={onRequireAuth} />}
+             <div className="product-content"><h3>{produto.nome}</h3><p>{produto.descricao}</p><div className="product-bottom"><div><strong>{formatarPreco(produto.preco)}</strong><small>{produto.estoque > 0 ? `${produto.estoque} em estoque` : 'Sem estoque'}</small></div><button className="buy-button" disabled={info.className !== 'status-ativo' && info.className !== 'status-baixo'} onClick={() => onComprar(produto)}>{auth ? 'Adicionar ao carrinho' : 'Entrar para comprar'} <span>↗</span></button></div></div>
+             {isAdmin && <div className="product-actions"><button onClick={() => onEditar(produto)}>Editar</button><button onClick={() => onDeletar(produto.id)}>Excluir</button></div>}
           </article>
         })}
       </div>

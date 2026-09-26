@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { apiFetch } from './api'
+import './styles/auth.css'
 
 function AuthPanel({ mode, onModeChange, onAuthenticated }) {
   const [nome, setNome] = useState('')

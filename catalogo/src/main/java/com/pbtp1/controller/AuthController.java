@@ -28,7 +28,8 @@ public class AuthController {
     @GetMapping("/me")
     public AuthService.UsuarioResponse me(@RequestHeader("Authorization") String authorization) {
         Usuario usuario = authService.requireUser(authorization);
-        return new AuthService.UsuarioResponse(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil().name());
+        return new AuthService.UsuarioResponse(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getPerfil().name(),
+                !Boolean.FALSE.equals(usuario.getAtivo()));
     }
 
     public record CadastroRequest(@NotBlank String nome, @Email @NotBlank String email, @NotBlank String senha) {

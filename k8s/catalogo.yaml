@@ -14,7 +14,6 @@ kind: Deployment
 metadata:
   name: catalogo
 spec:
-  # The demo seed runs once before the HPA scales the service.
   replicas: 1
   selector:
     matchLabels:
@@ -36,6 +35,8 @@ spec:
             - secretRef:
                 name: pb-at-secrets
           env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production
             - name: SPRING_APPLICATION_NAME
               value: catalogo
             - name: SPRING_DATASOURCE_URL

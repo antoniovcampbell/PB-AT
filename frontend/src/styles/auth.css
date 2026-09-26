@@ -1,0 +1,54 @@
+.auth-screen {
+  min-height: calc(100vh - 70px);
+  display: grid;
+  grid-template-columns: 1fr minmax(320px, 400px);
+  align-items: center;
+  gap: 8%;
+  padding: 50px 8%;
+}
+
+.auth-copy h2 {
+  max-width: 580px;
+  margin: 16px 0;
+  font-size: clamp(2.4rem, 5vw, 4.6rem);
+  line-height: 1;
+}
+
+.auth-points {
+  display: grid;
+  gap: 8px;
+  margin-top: 24px;
+  font-size: .73rem;
+  font-weight: 700;
+}
+
+.auth-card {
+  padding: 24px;
+}
+
+.auth-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.auth-card .campo {
+  margin-top: 14px;
+}
+
+.auth-switch {
+  margin: 16px 0 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: .7rem;
+}
+
+.demo-hint {
+  display: block;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: .62rem;
+  line-height: 1.5;
+  text-align: center;
+}

@@ -4,6 +4,7 @@ import com.pbtp1.model.Categoria;
 import com.pbtp1.model.Produto;
 import com.pbtp1.repository.CategoriaRepository;
 import com.pbtp1.repository.ProdutoRepository;
+import com.pbtp1.repository.EventoOutboxRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,6 +33,9 @@ class ProdutoServiceTest {
     @Autowired
     private CategoriaRepository categoriaRepository;
 
+    @Autowired
+    private EventoOutboxRepository eventoOutboxRepository;
+
     @MockitoBean
     private RabbitTemplate rabbitTemplate;
 
@@ -40,6 +45,7 @@ class ProdutoServiceTest {
     void setUp() {
         produtoRepository.deleteAll();
         categoriaRepository.deleteAll();
+        eventoOutboxRepository.deleteAll();
 
         categoria = categoriaRepository.save(
                 Categoria.builder().nome("Teste").descricao("Categoria de teste").build()
@@ -51,7 +57,7 @@ class ProdutoServiceTest {
         Produto produto = Produto.builder()
                 .nome("Produto Teste")
                 .descricao("Descricao teste")
-                .preco(100.0)
+                .preco(BigDecimal.valueOf(100.0))
                 .categoria(categoria)
                 .build();
 
@@ -62,6 +68,8 @@ class ProdutoServiceTest {
         assertThat(salvo.getCategoria().getId()).isEqualTo(categoria.getId());
         assertThat(salvo.getDataCriacao()).isNotNull();
         assertThat(salvo.getDataModificacao()).isNotNull();
+        assertThat(eventoOutboxRepository.findTop100ByPublicadoEmIsNullOrderByIdAsc())
+                .anyMatch(evento -> evento.getRoutingKey().equals("produto.criado"));
     }
 
     @Test
@@ -69,7 +77,7 @@ class ProdutoServiceTest {
         Categoria categoriaInvalida = Categoria.builder().id(999L).build();
         Produto produto = Produto.builder()
                 .nome("Produto Invalido")
-                .preco(50.0)
+                .preco(BigDecimal.valueOf(50.0))
                 .categoria(categoriaInvalida)
                 .build();
 
@@ -81,7 +89,7 @@ class ProdutoServiceTest {
     @Test
     void deveBuscarProdutoPorId() {
         Produto salvo = produtoService.salvar(
-                Produto.builder().nome("Busca").preco(10.0).build()
+                Produto.builder().nome("Busca").preco(BigDecimal.valueOf(10.0)).build()
         );
 
         Produto encontrado = produtoService.buscarPorId(salvo.getId());
@@ -97,25 +105,25 @@ class ProdutoServiceTest {
     @Test
     void deveAtualizarProduto() {
         Produto salvo = produtoService.salvar(
-                Produto.builder().nome("Original").preco(50.0).categoria(categoria).build()
+                Produto.builder().nome("Original").preco(BigDecimal.valueOf(50.0)).categoria(categoria).build()
         );
 
         Produto atualizacao = Produto.builder()
                 .nome("Atualizado")
                 .descricao("Nova descricao")
-                .preco(99.99)
+                .preco(BigDecimal.valueOf(99.99))
                 .build();
 
         Produto atualizado = produtoService.atualizar(salvo.getId(), atualizacao);
 
         assertThat(atualizado.getNome()).isEqualTo("Atualizado");
-        assertThat(atualizado.getPreco()).isEqualTo(99.99);
+        assertThat(atualizado.getPreco()).isEqualByComparingTo("99.99");
     }
 
     @Test
     void deveDeletarProduto() {
         Produto salvo = produtoService.salvar(
-                Produto.builder().nome("Deletar").preco(1.0).build()
+                Produto.builder().nome("Deletar").preco(BigDecimal.valueOf(1.0)).build()
         );
 
         produtoService.deletar(salvo.getId());
@@ -132,8 +140,8 @@ class ProdutoServiceTest {
 
     @Test
     void deveBuscarPorNome() {
-        produtoService.salvar(Produto.builder().nome("Mouse USB").preco(30.0).build());
-        produtoService.salvar(Produto.builder().nome("Teclado USB").preco(80.0).build());
+        produtoService.salvar(Produto.builder().nome("Mouse USB").preco(BigDecimal.valueOf(30.0)).build());
+        produtoService.salvar(Produto.builder().nome("Teclado USB").preco(BigDecimal.valueOf(80.0)).build());
 
         List<Produto> encontrados = produtoService.buscarPorNome("usb");
         assertThat(encontrados).hasSize(2);
@@ -141,11 +149,11 @@ class ProdutoServiceTest {
 
     @Test
     void deveBuscarPorFaixaPreco() {
-        produtoService.salvar(Produto.builder().nome("Barato").preco(10.0).build());
-        produtoService.salvar(Produto.builder().nome("Medio").preco(50.0).build());
-        produtoService.salvar(Produto.builder().nome("Caro").preco(200.0).build());
+        produtoService.salvar(Produto.builder().nome("Barato").preco(BigDecimal.valueOf(10.0)).build());
+        produtoService.salvar(Produto.builder().nome("Medio").preco(BigDecimal.valueOf(50.0)).build());
+        produtoService.salvar(Produto.builder().nome("Caro").preco(BigDecimal.valueOf(200.0)).build());
 
-        List<Produto> encontrados = produtoService.buscarPorFaixaPreco(20.0, 100.0);
+        List<Produto> encontrados = produtoService.buscarPorFaixaPreco(BigDecimal.valueOf(20.0), BigDecimal.valueOf(100.0));
         assertThat(encontrados).hasSize(1);
         assertThat(encontrados.get(0).getNome()).isEqualTo("Medio");
     }
@@ -153,7 +161,7 @@ class ProdutoServiceTest {
     @Test
     void deveBuscarPorTermo() {
         produtoService.salvar(
-                Produto.builder().nome("Monitor").descricao("Monitor 4K Ultra HD").preco(2500.0).build()
+                Produto.builder().nome("Monitor").descricao("Monitor 4K Ultra HD").preco(BigDecimal.valueOf(2500.0)).build()
         );
 
         List<Produto> porNome = produtoService.buscarPorTermo("monitor");
