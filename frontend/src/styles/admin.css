@@ -11,6 +11,10 @@
   margin-top: 16px;
 }
 
+.admin-review-list.admin-scroll-list {
+  margin-top: 0;
+}
+
 .admin-form,
 .admin-box {
   padding: 20px;
@@ -49,7 +53,12 @@
 .category-list {
   display: grid;
   gap: 8px;
+  max-height: 180px;
   margin-top: 14px;
+  padding-right: 5px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .category-list span {
@@ -198,6 +207,73 @@
   font-size: .72rem;
 }
 
+.admin-filterbar {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.5fr) repeat(2, minmax(130px, .7fr));
+  align-items: end;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.admin-filter {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.admin-filter > span {
+  color: var(--muted);
+  font-size: .65rem;
+  font-weight: 700;
+}
+
+.admin-filter select {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  outline: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: .72rem;
+}
+
+.admin-result-count {
+  color: var(--muted);
+  font-size: .68rem;
+  white-space: nowrap;
+}
+
+.admin-scroll-list {
+  max-height: 340px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 7px;
+  scrollbar-gutter: stable;
+}
+
+.admin-scroll-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.admin-scroll-list::-webkit-scrollbar-thumb {
+  background: var(--muted);
+}
+
+.admin-product-scroll {
+  max-height: 390px;
+}
+
+.admin-review-list.admin-scroll-list {
+  max-height: 360px;
+}
+
+.admin-product-row:last-child,
+.admin-row:last-child {
+  border-bottom: 0;
+}
+
 .admin-inventory {
   margin-top: 18px;
 }
@@ -268,6 +344,15 @@
   .admin-product-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .admin-filterbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-filterbar .admin-search {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
 }
 
 @media (max-width: 620px) {
@@ -288,6 +373,18 @@
 
   .admin-box-heading {
     display: grid;
+  }
+
+  .admin-filterbar {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-filterbar .admin-search {
+    grid-column: auto;
+  }
+
+  .admin-result-count {
+    white-space: normal;
   }
 
   .admin-search {
