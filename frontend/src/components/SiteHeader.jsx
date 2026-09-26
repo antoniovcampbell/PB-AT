@@ -5,7 +5,7 @@ function SiteHeader({ auth, isAdmin, aba, onNavigate, onBrandClick, onShowAuth, 
     <header className="topbar">
       <button className="brand" onClick={onBrandClick}>
         <span className="brand-mark">PB</span>
-        <span><strong>market</strong><small>curadoria para o cotidiano</small></span>
+         <span><strong>market</strong><small>produtos, pedidos e avaliações</small></span>
       </button>
       <nav className="main-nav">
         <button className={aba === 'catalogo' ? 'nav-active' : ''} onClick={() => onNavigate('catalogo')}>Explorar</button>

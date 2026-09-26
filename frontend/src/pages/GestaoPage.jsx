@@ -79,7 +79,7 @@ function GestaoPage({
       </div>
       <div className="admin-layout">
         <form className="admin-form" onSubmit={onSalvarProduto}>
-          <div className="form-heading"><span className="eyebrow">inventário</span><h3>{editandoId ? `Editar produto #${editandoId}` : 'Cadastrar produto'}</h3><p>Inclua informações claras para manter o catálogo atualizado.</p></div>
+           <div className="form-heading"><span className="eyebrow">inventário</span><h3>{editandoId ? `Editar produto #${editandoId}` : 'Cadastrar produto'}</h3><p>Informe os dados do produto para publicá-lo no catálogo e manter preço e estoque corretos.</p></div>
           <label className="campo"><span>Nome</span><input value={nome} onChange={(event) => onNomeChange(event.target.value)} required /></label>
           <label className="campo"><span>Descrição</span><textarea value={descricao} onChange={(event) => onDescricaoChange(event.target.value)} required /></label>
           <div className="form-line">
@@ -102,7 +102,7 @@ function GestaoPage({
             <div className="category-list">{categorias.map((categoria) => <span key={categoria.id}>{categoria.nome}<small>{produtos.filter((produto) => produto.categoria?.id === categoria.id).length}</small></span>)}</div>
           </div>
           <div className="admin-box state-legend">
-            <span className="eyebrow">estados</span><h3>Leitura rápida</h3>
+             <span className="eyebrow">estados do estoque</span><h3>Resumo por disponibilidade</h3>
             {Object.values(status).map((info) => <div key={info.label}><span className={`status-dot ${info.className}`} />{info.label}<strong>{produtos.filter((produto) => statusInfo(produto).label === info.label).length}</strong></div>)}
           </div>
         </div>

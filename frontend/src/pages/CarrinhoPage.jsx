@@ -5,10 +5,10 @@ function CarrinhoPage({ carrinho, formatarPreco, onAtualizar, onRemover, onFinal
     <section className="dashboard-section">
       <div className="section-heading">
         <div><span className="eyebrow">sua seleção</span><h2>Carrinho</h2></div>
-        <span className="result-count">{carrinho.itens.length} itens</span>
+         <span className="result-count">{carrinho.itens.length} {carrinho.itens.length === 1 ? 'item' : 'itens'}</span>
       </div>
       {carrinho.itens.length === 0 ? <div className="empty-state">
-        <span>＋</span><h3>Seu carrinho está vazio</h3><p>Adicione produtos enquanto explora o catálogo e finalize tudo de uma vez.</p>
+         <span>＋</span><h3>Seu carrinho está vazio</h3><p>Escolha produtos no catálogo. Depois, revise as quantidades e finalize seu pedido aqui.</p>
         <button className="btn btn-primario" onClick={onExplorar}>Explorar catálogo</button>
       </div> : <>
         <div className="cart-list">{carrinho.itens.map((item) => <article className="cart-item" key={item.produtoId}>

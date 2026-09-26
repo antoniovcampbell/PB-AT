@@ -4,8 +4,8 @@ function SiteFooter() {
   return (
     <footer className="footer">
       <span>PB market</span>
-      <span>Compra consciente, experiência simples.</span>
-      <span>© 2026</span>
+       <span>Consulte preços, estoque e avaliações antes de comprar.</span>
+       <span>© {new Date().getFullYear()} PB Market</span>
     </footer>
   )
 }

@@ -13,7 +13,7 @@ function ProdutoDetalhePage({ produto, auth, formatarPreco, statusInfo, onVoltar
           <span className="product-id">#{String(produto.id).padStart(2, '0')}</span>
           <span className={`status-pill ${info.className}`}>{info.label}</span>
           <div className="product-detail-glyph">{produto.nome.charAt(0)}</div>
-          <span className="product-category">{produto.categoria?.nome || 'Coleção PB'}</span>
+           <span className="product-category">{produto.categoria?.nome || 'Sem categoria'}</span>
         </div>
         <div className="product-detail-copy">
           <span className="eyebrow">detalhe do produto</span>
@@ -21,10 +21,10 @@ function ProdutoDetalhePage({ produto, auth, formatarPreco, statusInfo, onVoltar
           <p className="product-detail-description">{produto.descricao}</p>
           <div className="product-detail-purchase">
             <div><strong>{formatarPreco(produto.preco)}</strong><small>{produto.estoque > 0 ? `${produto.estoque} em estoque` : 'Sem estoque'}</small></div>
-            <button className="btn btn-primario" disabled={!disponivel} onClick={() => onComprar(produto)}>{auth ? 'Adicionar ao carrinho' : 'Entrar para comprar'} <span>↗</span></button>
+             <button className="btn btn-primario" disabled={!disponivel} onClick={() => onComprar(produto)}>{auth ? 'Adicionar ao carrinho' : 'Entre para adicionar'} <span>↗</span></button>
           </div>
           <dl className="product-detail-facts">
-            <div><dt>Categoria</dt><dd>{produto.categoria?.nome || 'Coleção PB'}</dd></div>
+             <div><dt>Categoria</dt><dd>{produto.categoria?.nome || 'Sem categoria'}</dd></div>
             <div><dt>Disponibilidade</dt><dd>{info.label}</dd></div>
             <div><dt>Identificação</dt><dd>Produto #{produto.id}</dd></div>
           </dl>

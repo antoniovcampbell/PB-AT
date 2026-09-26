@@ -71,7 +71,7 @@ export function useCommerce(auth, setErro, setAviso) {
       const compra = await apiFetch('/api/carrinho/finalizar', { method: 'POST', headers: { 'Idempotency-Key': checkoutKey.current } }, auth.token)
       setCarrinho(CARRINHO_VAZIO)
       checkoutKey.current = null
-      setAviso(`Compra #${compra.id} criada com sucesso.`)
+      setAviso(`Pedido #${compra.id} registrado. Acompanhe o status em Minhas compras.`)
       await carregarCompras()
     } catch (error) { setErro(error.message) }
   }

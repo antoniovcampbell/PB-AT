@@ -9,8 +9,8 @@ function ComprasPage({ compras, avaliacoes, auth, formatarPreco, onExplorar, onA
       </div>
       {compras.length === 0 ? <div className="empty-state">
         <span>✦</span>
-        <h3>Seu histórico começa aqui</h3>
-        <p>Compre um produto para liberar avaliações verificadas e acompanhar seu pedido.</p>
+         <h3>Você ainda não fez nenhuma compra</h3>
+         <p>Depois de finalizar um pedido, ele aparecerá aqui. Você também poderá acompanhar o status e avaliar os produtos comprados.</p>
         <button className="btn btn-primario" onClick={onExplorar}>Explorar catálogo</button>
       </div> : <div className="purchase-list">
         {compras.map((compra) => <article className="purchase-card" key={compra.id}>

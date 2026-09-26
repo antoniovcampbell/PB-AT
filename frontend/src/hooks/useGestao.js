@@ -32,17 +32,17 @@ export function useGestao(auth, isAdmin, aba, setErro, setAviso, carregarCatalog
     try {
       const usuario = await apiFetch(`/api/usuarios/${id}/ativo?ativo=${ativo}`, { method: 'PUT' }, auth.token)
       setUsuarios((atual) => atual.map((item) => item.id === id ? usuario : item))
-      setAviso('Usuário atualizado.')
+       setAviso(`A conta de ${usuario.nome} foi ${usuario.ativo ? 'ativada' : 'desativada'}.`)
     } catch (error) { setErro(error.message) }
   }
 
   async function cancelarCompra(id) {
-    if (!window.confirm('Cancelar esta compra e devolver os itens ao estoque?')) return
+    if (!window.confirm(`Cancelar a compra #${id} e devolver os itens ao estoque?`)) return
     try {
       const compra = await apiFetch(`/api/compras/${id}`, { method: 'DELETE' }, auth.token)
       setComprasAdmin((atual) => atual.map((item) => item.id === id ? compra : item))
       await carregarCatalogo()
-      setAviso('Compra cancelada.')
+       setAviso(`Compra #${id} cancelada; os itens foram devolvidos ao estoque.`)
     } catch (error) { setErro(error.message) }
   }
 

@@ -40,7 +40,7 @@ function AvaliacoesPorProduto({ produtoId, aberto = true, auth }) {
     }
   }
 
-  const mediaFormatada = media?.total > 0 ? `${Number(media.media).toLocaleString('pt-BR')} / 5` : 'Sem avaliações'
+  const mediaFormatada = media?.total > 0 ? `${Number(media.media).toLocaleString('pt-BR')} / 5` : 'Ainda sem notas'
   const avaliacoesFiltradas = useMemo(() => avaliacoes.filter((avaliacao) => {
     const notaCorresponde = filtroNota === '' || Number(avaliacao.nota) === Number(filtroNota)
     const texto = `${avaliacao.nomeUsuario} ${avaliacao.comentario || ''}`.toLocaleLowerCase('pt-BR')
@@ -50,7 +50,7 @@ function AvaliacoesPorProduto({ produtoId, aberto = true, auth }) {
   return (
     <div className="avaliacoes">
       <div className="avaliacoes-header">
-        <div><span className="eyebrow">feedback real</span><h3>Avaliações</h3><p className="avaliacoes-subtitulo">Notas e comentários de quem já comprou.</p></div>
+        <div><span className="eyebrow">opiniões de compradores</span><h3>Avaliações</h3><p className="avaliacoes-subtitulo">Notas e comentários vinculados a compras deste produto.</p></div>
         <span className="media"><strong>★ {mediaFormatada}</strong><small>{media?.total || 0} avaliações</small></span>
       </div>
       {erro && <p className="erro">{erro}</p>}
@@ -60,7 +60,7 @@ function AvaliacoesPorProduto({ produtoId, aberto = true, auth }) {
         <small>{avaliacoesFiltradas.length} de {avaliacoes.length}</small>
       </div>
       <div className="lista-avaliacoes">
-        {avaliacoes.length === 0 ? <p className="sem-avaliacao">Nenhuma avaliação ainda.</p> : avaliacoesFiltradas.length === 0 ? <p className="sem-avaliacao">Nenhuma avaliação corresponde ao filtro.</p> : avaliacoesFiltradas.map((avaliacao) => (
+        {avaliacoes.length === 0 ? <p className="sem-avaliacao">Este produto ainda não recebeu avaliações.</p> : avaliacoesFiltradas.length === 0 ? <p className="sem-avaliacao">Nenhuma avaliação corresponde à nota ou à busca informada.</p> : avaliacoesFiltradas.map((avaliacao) => (
           <article className="avaliacao" key={avaliacao.id}>
             <div className="avaliacao-cabecalho"><div><strong>{avaliacao.nomeUsuario}</strong><p className="avaliacao-data">{avaliacao.dataCriacao ? new Date(avaliacao.dataCriacao).toLocaleDateString('pt-BR') : ''}</p></div><span className="estrelas">{'★'.repeat(avaliacao.nota)}{'☆'.repeat(5 - avaliacao.nota)}</span></div>
             {avaliacao.comentario && <p>{avaliacao.comentario}</p>}

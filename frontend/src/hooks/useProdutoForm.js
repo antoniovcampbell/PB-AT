@@ -40,19 +40,19 @@ export function useProdutoForm(auth, carregarCatalogo, setErro, setAviso) {
       await apiFetch(editandoId ? `/api/produtos/${editandoId}` : '/api/produtos', { method: editandoId ? 'PUT' : 'POST', body: JSON.stringify(produto) }, auth.token)
       limparFormulario()
       await carregarCatalogo()
-      setAviso('Catálogo atualizado.')
+       setAviso(editandoId ? `Produto #${editandoId} atualizado no catálogo.` : 'Produto cadastrado no catálogo.')
     } catch (error) { setErro(error.message) }
   }
 
   async function deletarProduto(id) {
-    if (!window.confirm('Excluir este produto?')) return
-    try { await apiFetch(`/api/produtos/${id}`, { method: 'DELETE' }, auth.token); await carregarCatalogo(); setAviso('Produto removido.') } catch (error) { setErro(error.message) }
+    if (!window.confirm(`Excluir o produto #${id} do catálogo?`)) return
+    try { await apiFetch(`/api/produtos/${id}`, { method: 'DELETE' }, auth.token); await carregarCatalogo(); setAviso(`Produto #${id} removido do catálogo.`) } catch (error) { setErro(error.message) }
   }
 
   async function criarCategoria(event) {
     event.preventDefault()
     if (!novaCategoria.trim()) return
-    try { await apiFetch('/api/categorias', { method: 'POST', body: JSON.stringify({ nome: novaCategoria.trim(), descricao: 'Categoria criada pelo administrador' }) }, auth.token); setNovaCategoria(''); await carregarCatalogo() } catch (error) { setErro(error.message) }
+    try { await apiFetch('/api/categorias', { method: 'POST', body: JSON.stringify({ nome: novaCategoria.trim(), descricao: 'Categoria para organizar os produtos do catálogo.' }) }, auth.token); setNovaCategoria(''); await carregarCatalogo(); setAviso('Categoria adicionada ao catálogo.') } catch (error) { setErro(error.message) }
   }
 
   return { editandoId, nome, descricao, preco, estoque, statusProduto, categoriaProduto, novaCategoria,
